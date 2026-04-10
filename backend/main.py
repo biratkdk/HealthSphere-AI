@@ -29,29 +29,35 @@ def bootstrap_application() -> None:
     if _bootstrapped:
         return
 
-    settings = get_settings()
-    settings.validate_runtime_secrets()
+    logger = logging.getLogger("healthsphere.bootstrap")
 
-    _db_url = settings.resolved_database_url
-    _is_in_memory = _db_url in {"sqlite://", "sqlite:///:memory:"}
+    try:
+        settings = get_settings()
+        settings.validate_runtime_secrets()
 
-    if _is_in_memory:
-        # Alembic uses NullPool which creates a separate in-memory connection —
-        # tables would disappear. Use init_db() so the shared StaticPool engine is used.
-        init_db()
-    elif settings.should_auto_migrate:
-        run_migrations()
-    elif settings.is_local_like:
-        init_db()
+        _db_url = settings.resolved_database_url
+        _is_in_memory = _db_url in {"sqlite://", "sqlite:///:memory:"}
 
-    with SessionLocal() as db:
-        seed_database(db, settings)
-        prune_notifications(db, settings.notification_retention_days)
-        prune_report_jobs(db, settings.report_retention_days)
-        prune_audit_logs(db, settings.audit_log_retention_days)
+        if _is_in_memory:
+            # Alembic uses NullPool which creates a separate in-memory connection —
+            # tables would disappear. Use init_db() so the shared StaticPool engine is used.
+            init_db()
+        elif settings.should_auto_migrate:
+            run_migrations()
+        elif settings.is_local_like:
+            init_db()
 
-    get_storage_service().ensure_ready()
-    _bootstrapped = True
+        with SessionLocal() as db:
+            seed_database(db, settings)
+            prune_notifications(db, settings.notification_retention_days)
+            prune_report_jobs(db, settings.report_retention_days)
+            prune_audit_logs(db, settings.audit_log_retention_days)
+
+        get_storage_service().ensure_ready()
+        _bootstrapped = True
+    except Exception:
+        logger.exception("bootstrap-failed")
+        raise
 
 
 def create_app() -> FastAPI:
