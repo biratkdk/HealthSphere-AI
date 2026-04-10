@@ -17,6 +17,29 @@ def test_postgres_alias_and_unpooled_url_are_supported() -> None:
     assert settings.resolved_migration_database_url == "postgresql+psycopg://user:pass@direct.example.com/app"
 
 
+def test_vercel_prefers_managed_postgres_over_sqlite_fallback() -> None:
+    settings = Settings(
+        environment="vercel",
+        database_url="sqlite:///./healthsphere.db",
+        postgres_url="postgresql://user:pass@pool.example.com/app",
+    )
+
+    assert settings.resolved_database_url == "postgresql+psycopg://user:pass@pool.example.com/app"
+
+
+def test_vercel_prefers_managed_unpooled_url_for_migrations() -> None:
+    settings = Settings(
+        environment="vercel",
+        database_url="sqlite:///./healthsphere.db",
+        database_url_unpooled="sqlite:///./healthsphere.db",
+        postgres_url="postgresql://user:pass@pool.example.com/app",
+        postgres_url_non_pooling="postgresql://user:pass@direct.example.com/app",
+    )
+
+    assert settings.resolved_database_url == "postgresql+psycopg://user:pass@pool.example.com/app"
+    assert settings.resolved_migration_database_url == "postgresql+psycopg://user:pass@direct.example.com/app"
+
+
 def test_auto_migrate_requires_explicit_opt_in_outside_local() -> None:
     settings = Settings(environment="production", auto_migrate=False)
     assert settings.should_auto_migrate is False

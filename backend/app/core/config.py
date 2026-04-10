@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     api_prefix: str = "/api/v1"
     database_url: str = "sqlite://"
     database_url_unpooled: str = ""
+    postgres_url: str = ""
+    postgres_url_non_pooling: str = ""
     db_pool_size: int = Field(default=10, ge=1, le=100)
     db_max_overflow: int = Field(default=20, ge=0, le=100)
     db_pool_timeout: int = Field(default=30, ge=5, le=120)
@@ -214,11 +216,11 @@ class Settings(BaseSettings):
 
     @property
     def resolved_database_url(self) -> str:
-        return self._normalize_database_url(self.database_url)
+        return self._normalize_database_url(self._effective_database_url())
 
     @property
     def resolved_migration_database_url(self) -> str:
-        return self._normalize_database_url(self.database_url_unpooled or self.database_url)
+        return self._normalize_database_url(self._effective_migration_database_url())
 
     @property
     def resolved_storage_root(self) -> str:
@@ -308,6 +310,20 @@ class Settings(BaseSettings):
         if url.startswith("postgresql://"):
             return f"postgresql+psycopg://{url.removeprefix('postgresql://')}"
         return url
+
+    def _effective_database_url(self) -> str:
+        primary = self.database_url.strip()
+        managed = self.postgres_url.strip()
+        if self.is_vercel and managed and (not primary or primary.startswith("sqlite")):
+            return managed
+        return primary or managed
+
+    def _effective_migration_database_url(self) -> str:
+        unpooled = self.database_url_unpooled.strip()
+        managed_unpooled = self.postgres_url_non_pooling.strip()
+        if self.is_vercel and managed_unpooled and (not unpooled or unpooled.startswith("sqlite")):
+            return managed_unpooled
+        return unpooled or self._effective_database_url()
 
 
 @lru_cache(maxsize=1)

@@ -12,7 +12,6 @@
   ],
 
   "env": {
-    "DATABASE_URL":             "sqlite:///./healthsphere.db",
     "ENVIRONMENT":              "vercel",
     "TASK_EXECUTION_MODE":      "dispatcher",
     "STORAGE_BACKEND":          "auto",
