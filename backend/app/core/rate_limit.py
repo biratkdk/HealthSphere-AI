@@ -7,8 +7,13 @@ from time import time
 from uuid import uuid4
 
 from fastapi import HTTPException, status
-from redis import Redis
-from redis.exceptions import RedisError
+
+try:
+    from redis import Redis
+    from redis.exceptions import RedisError
+except ImportError:  # pragma: no cover - optional runtime dependency
+    Redis = None
+    RedisError = Exception
 
 from backend.app.core.config import get_settings
 
@@ -50,6 +55,8 @@ def _get_redis_client() -> Redis | None:
     global _REDIS_CLIENT
     settings = get_settings()
     if settings.resolved_rate_limit_backend != "redis":
+        return None
+    if Redis is None:
         return None
     if _REDIS_CLIENT is not None:
         return _REDIS_CLIENT
