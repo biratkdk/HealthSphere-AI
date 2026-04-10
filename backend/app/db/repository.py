@@ -1013,6 +1013,17 @@ def create_audit_log(
     db.commit()
 
 
+def _risk_band_from_flags(risk_flags: list) -> str:
+    n = len(risk_flags) if risk_flags else 0
+    if n >= 4:
+        return "critical"
+    if n >= 3:
+        return "high"
+    if n >= 1:
+        return "medium"
+    return "low"
+
+
 def _patient_to_schema(patient: PatientORM) -> PatientRecord:
     sorted_labs = sorted(patient.labs, key=lambda item: item.collected_at)
     sorted_imaging = sorted(patient.imaging_history, key=lambda item: item.captured_at, reverse=True)
@@ -1037,6 +1048,7 @@ def _patient_to_schema(patient: PatientORM) -> PatientRecord:
         imaging_history=[_imaging_finding_to_schema(item) for item in sorted_imaging],
         risk_flags=patient.risk_flags,
         last_updated=_ensure_utc(patient.last_updated),
+        risk_band=_risk_band_from_flags(patient.risk_flags),
     )
 
 

@@ -64,6 +64,7 @@ class PatientRecord(APIModel):
     imaging_history: list[ImagingFinding]
     risk_flags: list[str]
     last_updated: datetime
+    risk_band: str = "low"
 
 
 class Alert(APIModel):

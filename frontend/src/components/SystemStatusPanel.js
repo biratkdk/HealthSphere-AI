@@ -1,23 +1,25 @@
 import React from "react";
+import CareUnitChart from "./CareUnitChart";
 
 const SystemStatusPanel = ({ analytics, reportJobs = [] }) => {
   if (!analytics) {
     return (
       <section className="panel">
-        <div className="panel-header">
-          <h3>System status</h3>
+        <div className="panel-header"><h3>System status</h3></div>
+        <div className="loading-panel" style={{ padding: "24px 0" }}>
+          <div className="spinner" />
         </div>
-        <p className="subtle-copy">Analytics are not available yet.</p>
       </section>
     );
   }
 
-  const capabilityCards = [
-    { label: "Task execution", value: analytics.capabilities.task_execution_mode },
-    { label: "Storage", value: analytics.capabilities.storage_backend },
-    { label: "Single sign-on", value: analytics.capabilities.oidc_enabled ? "enabled" : "disabled" },
-    { label: "Metrics", value: analytics.capabilities.metrics_enabled ? "enabled" : "disabled" },
-    { label: "Live updates", value: analytics.capabilities.live_updates_enabled ? "enabled" : "disabled" },
+  const caps = analytics.capabilities;
+  const capCards = [
+    { label: "Task execution", value: caps.task_execution_mode, ok: true },
+    { label: "Storage",        value: caps.storage_backend,     ok: true },
+    { label: "Live updates",   value: caps.live_updates_enabled ? "enabled" : "disabled", ok: caps.live_updates_enabled },
+    { label: "Metrics",        value: caps.metrics_enabled ? "enabled" : "disabled",       ok: caps.metrics_enabled },
+    { label: "Single sign-on", value: caps.oidc_enabled ? "enabled" : "disabled",          ok: caps.oidc_enabled },
   ];
 
   return (
@@ -25,57 +27,43 @@ const SystemStatusPanel = ({ analytics, reportJobs = [] }) => {
       <div className="panel-header">
         <h3>System status</h3>
         <span className="subtle-copy">
-          Queue {analytics.report_queue.queued} queued | {analytics.report_queue.running} running
+          {analytics.report_queue.queued} queued &middot; {analytics.report_queue.running} running
         </span>
       </div>
 
-        <div className="status-grid">
-          {capabilityCards.map((capability) => (
-          <article key={capability.label} className="status-card elevated-card">
-            <span>{capability.label}</span>
-            <strong>{capability.value}</strong>
+      <div className="stats-row" style={{ marginBottom: 16 }}>
+        <div className="stat-item">
+          <span>Patients</span>
+          <strong>{analytics.total_patients}</strong>
+        </div>
+        <div className="stat-item">
+          <span>Open alerts</span>
+          <strong>{analytics.open_alerts}</strong>
+        </div>
+        <div className="stat-item">
+          <span>Critical</span>
+          <strong>{analytics.critical_alerts}</strong>
+        </div>
+        <div className="stat-item">
+          <span>Unread inbox</span>
+          <strong>{analytics.unread_notifications}</strong>
+        </div>
+      </div>
+
+      <div className="status-grid">
+        {capCards.map((c) => (
+          <article key={c.label} className="status-card elevated-card">
+            <span>{c.label}</span>
+            <strong style={{ color: c.ok ? "var(--teal)" : "var(--muted)" }}>{c.value}</strong>
           </article>
-          ))}
-        </div>
-
-      <div className="panel-section">
-        <div className="panel-header">
-          <h4>Care units</h4>
-          <span className="subtle-copy">{analytics.care_units.length} monitored units</span>
-        </div>
-        <div className="care-unit-grid">
-          {analytics.care_units.map((careUnit) => (
-            <article key={careUnit.care_unit} className="care-unit-card elevated-card">
-              <strong>{careUnit.care_unit}</strong>
-              <span>{careUnit.patient_count} patients</span>
-              <span>{careUnit.open_alerts} open alerts</span>
-            </article>
-          ))}
-        </div>
+        ))}
       </div>
 
-      <div className="panel-section">
-        <div className="panel-header">
-          <h4>Recent report jobs</h4>
-          <span className="subtle-copy">{reportJobs.length} tracked</span>
+      {analytics.care_units?.length > 0 && (
+        <div className="panel-section">
+          <CareUnitChart careUnits={analytics.care_units} />
         </div>
-        <div className="queue-list">
-          {reportJobs.slice(0, 4).map((job) => (
-            <article key={job.job_id} className="queue-row elevated-card">
-              <div>
-                <strong>Patient {job.patient_id}</strong>
-                <p className="subtle-copy">
-                  {job.requested_by || "system"} | {job.workflow_stage.replaceAll("_", " ")} | {job.progress_percent}%
-                </p>
-              </div>
-              <span className={`tone tone-${job.status === "failed" ? "critical" : job.status === "running" ? "medium" : "low"}`}>
-                {job.status}
-              </span>
-            </article>
-          ))}
-          {reportJobs.length === 0 ? <p className="subtle-copy">No report jobs are available yet.</p> : null}
-        </div>
-      </div>
+      )}
     </section>
   );
 };

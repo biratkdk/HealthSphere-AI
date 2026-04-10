@@ -1,5 +1,6 @@
-import React, { Component, Suspense, lazy } from "react";
+import React, { Component, Suspense, lazy, useEffect, useState } from "react";
 import { NavLink, Route, Routes, useLocation } from "react-router-dom";
+import useSWR from "swr";
 
 class RouteErrorBoundary extends Component {
   constructor(props) {
@@ -12,18 +13,17 @@ class RouteErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
-    // In production you would forward this to an error tracking service.
     console.error("Route render error:", error, info.componentStack);
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <section className="panel">
-          <h2>Something went wrong</h2>
+        <section className="panel error-panel">
+          <strong className="error-text">Something went wrong</strong>
           <p>This page encountered an unexpected error. Please refresh or navigate away.</p>
           <button
-            className="secondary-button"
+            className="secondary-button small-button"
             type="button"
             onClick={() => this.setState({ hasError: false, error: null })}
           >
@@ -56,9 +56,33 @@ const mobileRoutes = [
   { to: "/profile", label: "Profile", shortLabel: "Profile" },
 ];
 
+const useTheme = () => {
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem("hs-theme") || "light";
+    } catch {
+      return "light";
+    }
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    try {
+      localStorage.setItem("hs-theme", theme);
+    } catch { /* */ }
+  }, [theme]);
+
+  return [theme, setTheme];
+};
+
 const App = () => {
   const location = useLocation();
   const { user, loading, isAuthenticated, logout } = useAuth();
+  const [theme, setTheme] = useTheme();
+
+  const { data: analytics } = useSWR(isAuthenticated ? ["analytics"] : null);
+  const unreadCount = analytics?.unread_notifications || 0;
+
   const initials = (user?.full_name || "HS")
     .split(" ")
     .filter(Boolean)
@@ -99,12 +123,15 @@ const App = () => {
         </div>
         <div className="header-controls">
           <nav className="nav-links nav-links-primary" aria-label="Primary">
-            <NavLink to="/" end>
-              Operations
-            </NavLink>
+            <NavLink to="/" end>Operations</NavLink>
             <NavLink to="/patients">Patients</NavLink>
             <NavLink to="/reports">Reports</NavLink>
-            <NavLink to="/notifications">Inbox</NavLink>
+            <div className="nav-badge-wrap">
+              <NavLink to="/notifications">Inbox</NavLink>
+              {unreadCount > 0 && (
+                <span className="nav-badge">{unreadCount > 99 ? "99+" : unreadCount}</span>
+              )}
+            </div>
             <NavLink to="/profile">Profile</NavLink>
             {user?.role === "admin" ? <NavLink to="/admin">Admin</NavLink> : null}
           </nav>
@@ -113,11 +140,18 @@ const App = () => {
             <div className="user-avatar small-avatar">{initials}</div>
             <div>
               <strong>{user?.full_name}</strong>
-              <span>
-                {user?.role} | {user?.username}
-              </span>
+              <span>{user?.role} &middot; {user?.username}</span>
               <span>{user?.organization_name || user?.preferences?.department || user?.auth_provider}</span>
             </div>
+            <button
+              className="theme-toggle"
+              type="button"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? "☀" : "◑"}
+            </button>
             <button className="secondary-button small-button" type="button" onClick={() => void logout()}>
               Sign out
             </button>
@@ -127,18 +161,18 @@ const App = () => {
 
       <main className="app-main">
         <RouteErrorBoundary>
-        <Suspense fallback={<section className="panel loading-panel"><div className="spinner" /><p>Loading workspace&hellip;</p></section>}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/patients" element={<Patients />} />
-            <Route path="/patients/:patientId" element={<PatientDetails />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-          </Routes>
-        </Suspense>
+          <Suspense fallback={<section className="panel loading-panel"><div className="spinner" /><p>Loading workspace&hellip;</p></section>}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/patients" element={<Patients />} />
+              <Route path="/patients/:patientId" element={<PatientDetails />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
+            </Routes>
+          </Suspense>
         </RouteErrorBoundary>
       </main>
 
@@ -149,9 +183,7 @@ const App = () => {
           </NavLink>
         ))}
         {user?.role === "admin" ? (
-          <NavLink to="/admin">
-            <span>Admin</span>
-          </NavLink>
+          <NavLink to="/admin"><span>Admin</span></NavLink>
         ) : null}
       </nav>
     </div>
