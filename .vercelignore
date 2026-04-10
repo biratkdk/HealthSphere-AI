@@ -4,8 +4,10 @@ __pycache__/
 .pytest_cache/
 backend/tests/
 
-# Frontend — handled by separate Vercel project (healthsphere-ai.vercel.app)
-frontend/
+# Frontend build artifacts (Vercel builds from source itself)
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
 
 # Data & ML artifacts — large, not needed at runtime
 ml_pipeline/data/
