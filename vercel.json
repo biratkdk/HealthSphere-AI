@@ -20,6 +20,6 @@
     "SEED_DEMO_DATA":           "true",
     "SECURITY_HEADERS_ENABLED": "true",
     "METRICS_ENABLED":          "false",
-    "ALLOWED_ORIGINS":          "https://healthsphere-ai.vercel.app,http://localhost:3000,http://localhost:5173"
+    "ALLOWED_ORIGINS":          "https://healthsphere-ai-frontend.vercel.app,https://healthsphere-ai.vercel.app,http://localhost:3000,http://localhost:5173"
   }
 }
