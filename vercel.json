@@ -38,9 +38,9 @@
   "env": {
     "ENVIRONMENT":              "vercel",
     "TASK_EXECUTION_MODE":      "dispatcher",
-    "STORAGE_BACKEND":          "vercel_blob",
+    "STORAGE_BACKEND":          "auto",
     "AUTO_MIGRATE":             "true",
-    "SEED_DEMO_DATA":           "false",
+    "SEED_DEMO_DATA":           "true",
     "SECURITY_HEADERS_ENABLED": "true",
     "METRICS_ENABLED":          "false"
   },
