@@ -1,0 +1,663 @@
+{
+  "generated_at": "2025-12-09T09:17:18+00:00",
+  "synthetic": true,
+  "source_note": "Synthetic Nepali-style demo records for product testing only.",
+  "patients": [
+    {
+      "patient_id": 2101,
+      "mrn": "NP-2101",
+      "name": "Srijana Karki",
+      "age": 58,
+      "sex": "Female",
+      "city": "Kathmandu",
+      "care_unit": "ICU",
+      "diagnosis": "Community-acquired pneumonia observation",
+      "vitals": {
+        "heart_rate": 109,
+        "respiratory_rate": 25,
+        "systolic_bp": 98,
+        "temperature_c": 38.1,
+        "oxygen_saturation": 91,
+        "pain_score": 3
+      },
+      "medications": [
+        "Ceftriaxone",
+        "Azithromycin",
+        "Paracetamol"
+      ],
+      "risk_flags": [
+        "Escalating oxygen requirement",
+        "Fever trend"
+      ],
+      "last_updated": "2025-12-09T08:59:18+00:00",
+      "labs": [
+        {
+          "name": "Lactate",
+          "value": 2.6,
+          "unit": "mmol/L",
+          "collected_at": "2025-12-09T07:57:18+00:00"
+        },
+        {
+          "name": "Glucose",
+          "value": 141,
+          "unit": "mg/dL",
+          "collected_at": "2025-12-09T08:32:18+00:00"
+        },
+        {
+          "name": "Creatinine",
+          "value": 1.3,
+          "unit": "mg/dL",
+          "collected_at": "2025-12-09T08:32:18+00:00"
+        }
+      ],
+      "imaging_history": [
+        {
+          "modality": "Chest X-Ray",
+          "summary": "Patchy right lower zone haziness under follow-up",
+          "confidence": 0.86,
+          "captured_at": "2025-12-09T03:17:18+00:00"
+        }
+      ]
+    },
+    {
+      "patient_id": 2102,
+      "mrn": "NP-2102",
+      "name": "Nabin Shrestha",
+      "age": 46,
+      "sex": "Male",
+      "city": "Pokhara",
+      "care_unit": "Telemetry",
+      "diagnosis": "Hypertensive urgency review",
+      "vitals": {
+        "heart_rate": 82,
+        "respiratory_rate": 17,
+        "systolic_bp": 164,
+        "temperature_c": 36.9,
+        "oxygen_saturation": 97,
+        "pain_score": 1
+      },
+      "medications": [
+        "Amlodipine",
+        "Losartan",
+        "Aspirin"
+      ],
+      "risk_flags": [
+        "Blood pressure variability"
+      ],
+      "last_updated": "2025-12-09T08:43:18+00:00",
+      "labs": [
+        {
+          "name": "Glucose",
+          "value": 118,
+          "unit": "mg/dL",
+          "collected_at": "2025-12-09T07:17:18+00:00"
+        },
+        {
+          "name": "LDL",
+          "value": 148,
+          "unit": "mg/dL",
+          "collected_at": "2025-12-08T23:17:18+00:00"
+        },
+        {
+          "name": "Troponin",
+          "value": 0.02,
+          "unit": "ng/mL",
+          "collected_at": "2025-12-09T07:17:18+00:00"
+        }
+      ],
+      "imaging_history": [
+        {
+          "modality": "Cardiac CT",
+          "summary": "Mild calcified plaque burden without acute concern",
+          "confidence": 0.82,
+          "captured_at": "2025-12-08T09:17:18+00:00"
+        }
+      ]
+    },
+    {
+      "patient_id": 2103,
+      "mrn": "NP-2103",
+      "name": "Purnima Rai",
+      "age": 32,
+      "sex": "Female",
+      "city": "Dharan",
+      "care_unit": "Medical Ward",
+      "diagnosis": "Postpartum infection watch",
+      "vitals": {
+        "heart_rate": 97,
+        "respiratory_rate": 21,
+        "systolic_bp": 112,
+        "temperature_c": 37.8,
+        "oxygen_saturation": 95,
+        "pain_score": 4
+      },
+      "medications": [
+        "Amoxicillin-clavulanate",
+        "Ibuprofen"
+      ],
+      "risk_flags": [
+        "Recent fever",
+        "Postpartum monitoring"
+      ],
+      "last_updated": "2025-12-09T08:35:18+00:00",
+      "labs": [
+        {
+          "name": "Lactate",
+          "value": 1.8,
+          "unit": "mmol/L",
+          "collected_at": "2025-12-09T06:17:18+00:00"
+        },
+        {
+          "name": "CRP",
+          "value": 34,
+          "unit": "mg/L",
+          "collected_at": "2025-12-09T04:17:18+00:00"
+        },
+        {
+          "name": "Glucose",
+          "value": 106,
+          "unit": "mg/dL",
+          "collected_at": "2025-12-09T06:17:18+00:00"
+        }
+      ],
+      "imaging_history": [
+        {
+          "modality": "Pelvic Ultrasound",
+          "summary": "No retained products identified on limited review",
+          "confidence": 0.8,
+          "captured_at": "2025-12-07T09:17:18+00:00"
+        }
+      ]
+    },
+    {
+      "patient_id": 2104,
+      "mrn": "NP-2104",
+      "name": "Bikash Gurung",
+      "age": 61,
+      "sex": "Male",
+      "city": "Bharatpur",
+      "care_unit": "Step-down",
+      "diagnosis": "COPD exacerbation stabilization",
+      "vitals": {
+        "heart_rate": 101,
+        "respiratory_rate": 23,
+        "systolic_bp": 126,
+        "temperature_c": 37.3,
+        "oxygen_saturation": 90,
+        "pain_score": 2
+      },
+      "medications": [
+        "Salbutamol",
+        "Tiotropium",
+        "Prednisolone"
+      ],
+      "risk_flags": [
+        "Baseline low oxygen saturation",
+        "Inhaler adherence review"
+      ],
+      "last_updated": "2025-12-09T08:50:18+00:00",
+      "labs": [
+        {
+          "name": "Glucose",
+          "value": 129,
+          "unit": "mg/dL",
+          "collected_at": "2025-12-09T05:17:18+00:00"
+        },
+        {
+          "name": "Creatinine",
+          "value": 1.1,
+          "unit": "mg/dL",
+          "collected_at": "2025-12-09T05:17:18+00:00"
+        },
+        {
+          "name": "CO2",
+          "value": 29,
+          "unit": "mmol/L",
+          "collected_at": "2025-12-09T05:17:18+00:00"
+        }
+      ],
+      "imaging_history": [
+        {
+          "modality": "Chest X-Ray",
+          "summary": "Hyperinflation pattern without focal consolidation",
+          "confidence": 0.84,
+          "captured_at": "2025-12-09T00:17:18+00:00"
+        }
+      ]
+    },
+    {
+      "patient_id": 2105,
+      "mrn": "NP-2105",
+      "name": "Manisha Thapa",
+      "age": 39,
+      "sex": "Female",
+      "city": "Butwal",
+      "care_unit": "Endocrine Ward",
+      "diagnosis": "Diabetes stabilization",
+      "vitals": {
+        "heart_rate": 76,
+        "respiratory_rate": 16,
+        "systolic_bp": 122,
+        "temperature_c": 36.7,
+        "oxygen_saturation": 98,
+        "pain_score": 1
+      },
+      "medications": [
+        "Metformin",
+        "Insulin glargine",
+        "Lisinopril"
+      ],
+      "risk_flags": [
+        "Recent glucose variability"
+      ],
+      "last_updated": "2025-12-09T08:26:18+00:00",
+      "labs": [
+        {
+          "name": "HbA1c",
+          "value": 8.1,
+          "unit": "%",
+          "collected_at": "2025-12-07T09:17:18+00:00"
+        },
+        {
+          "name": "Glucose",
+          "value": 182,
+          "unit": "mg/dL",
+          "collected_at": "2025-12-09T08:17:18+00:00"
+        },
+        {
+          "name": "Microalbumin",
+          "value": 41,
+          "unit": "mg/g",
+          "collected_at": "2025-12-07T09:17:18+00:00"
+        }
+      ],
+      "imaging_history": [
+        {
+          "modality": "Retinal Screening",
+          "summary": "Early background retinopathy follow-up recommended",
+          "confidence": 0.88,
+          "captured_at": "2025-11-28T09:17:18+00:00"
+        }
+      ]
+    },
+    {
+      "patient_id": 2106,
+      "mrn": "NP-2106",
+      "name": "Ritesh Lama",
+      "age": 27,
+      "sex": "Male",
+      "city": "Lalitpur",
+      "care_unit": "Observation",
+      "diagnosis": "Mild head injury follow-up",
+      "vitals": {
+        "heart_rate": 72,
+        "respiratory_rate": 15,
+        "systolic_bp": 118,
+        "temperature_c": 36.6,
+        "oxygen_saturation": 99,
+        "pain_score": 2
+      },
+      "medications": [
+        "Paracetamol"
+      ],
+      "risk_flags": [
+        "Neurologic re-check"
+      ],
+      "last_updated": "2025-12-09T08:54:18+00:00",
+      "labs": [
+        {
+          "name": "Glucose",
+          "value": 102,
+          "unit": "mg/dL",
+          "collected_at": "2025-12-09T06:17:18+00:00"
+        },
+        {
+          "name": "Sodium",
+          "value": 139,
+          "unit": "mmol/L",
+          "collected_at": "2025-12-09T06:17:18+00:00"
+        },
+        {
+          "name": "Creatinine",
+          "value": 0.9,
+          "unit": "mg/dL",
+          "collected_at": "2025-12-09T06:17:18+00:00"
+        }
+      ],
+      "imaging_history": [
+        {
+          "modality": "CT Brain",
+          "summary": "No acute intracranial bleed on initial review",
+          "confidence": 0.92,
+          "captured_at": "2025-12-08T21:17:18+00:00"
+        }
+      ]
+    },
+    {
+      "patient_id": 2107,
+      "mrn": "NP-2107",
+      "name": "Aashika Bhandari",
+      "age": 34,
+      "sex": "Female",
+      "city": "Bhaktapur",
+      "care_unit": "Women's Health",
+      "diagnosis": "Postpartum infection surveillance",
+      "vitals": {
+        "heart_rate": 89,
+        "respiratory_rate": 18,
+        "systolic_bp": 114,
+        "temperature_c": 37.5,
+        "oxygen_saturation": 97,
+        "pain_score": 3
+      },
+      "medications": [
+        "Ibuprofen",
+        "Amoxicillin-clavulanate"
+      ],
+      "risk_flags": [
+        "Postpartum monitoring"
+      ],
+      "last_updated": "2025-12-09T08:46:18+00:00",
+      "labs": [
+        {
+          "name": "CRP",
+          "value": 18,
+          "unit": "mg/L",
+          "collected_at": "2025-12-09T05:17:18+00:00"
+        },
+        {
+          "name": "Glucose",
+          "value": 96,
+          "unit": "mg/dL",
+          "collected_at": "2025-12-09T05:17:18+00:00"
+        },
+        {
+          "name": "Creatinine",
+          "value": 0.8,
+          "unit": "mg/dL",
+          "collected_at": "2025-12-09T05:17:18+00:00"
+        }
+      ],
+      "imaging_history": [
+        {
+          "modality": "Pelvic Ultrasound",
+          "summary": "No retained products identified on interval review",
+          "confidence": 0.9,
+          "captured_at": "2025-12-08T09:17:18+00:00"
+        }
+      ]
+    },
+    {
+      "patient_id": 2108,
+      "mrn": "NP-2108",
+      "name": "Pradeep Koirala",
+      "age": 64,
+      "sex": "Male",
+      "city": "Janakpur",
+      "care_unit": "Telemetry",
+      "diagnosis": "Preventive cardiology review",
+      "vitals": {
+        "heart_rate": 86,
+        "respiratory_rate": 18,
+        "systolic_bp": 142,
+        "temperature_c": 36.9,
+        "oxygen_saturation": 96,
+        "pain_score": 1
+      },
+      "medications": [
+        "Aspirin",
+        "Atorvastatin",
+        "Losartan"
+      ],
+      "risk_flags": [
+        "Elevated LDL"
+      ],
+      "last_updated": "2025-12-09T08:38:18+00:00",
+      "labs": [
+        {
+          "name": "LDL",
+          "value": 158,
+          "unit": "mg/dL",
+          "collected_at": "2025-12-09T01:17:18+00:00"
+        },
+        {
+          "name": "Troponin",
+          "value": 0.02,
+          "unit": "ng/mL",
+          "collected_at": "2025-12-09T07:17:18+00:00"
+        },
+        {
+          "name": "Glucose",
+          "value": 109,
+          "unit": "mg/dL",
+          "collected_at": "2025-12-09T07:17:18+00:00"
+        }
+      ],
+      "imaging_history": [
+        {
+          "modality": "Cardiac CT",
+          "summary": "Mild plaque burden without interval progression",
+          "confidence": 0.81,
+          "captured_at": "2025-12-06T09:17:18+00:00"
+        }
+      ]
+    },
+    {
+      "patient_id": 2109,
+      "mrn": "NP-2109",
+      "name": "Sabina Magar",
+      "age": 49,
+      "sex": "Female",
+      "city": "Nepalgunj",
+      "care_unit": "Medical Ward",
+      "diagnosis": "Diabetes pathway review",
+      "vitals": {
+        "heart_rate": 79,
+        "respiratory_rate": 16,
+        "systolic_bp": 128,
+        "temperature_c": 36.8,
+        "oxygen_saturation": 98,
+        "pain_score": 1
+      },
+      "medications": [
+        "Metformin",
+        "Semaglutide"
+      ],
+      "risk_flags": [
+        "Glucose variability"
+      ],
+      "last_updated": "2025-12-09T08:31:18+00:00",
+      "labs": [
+        {
+          "name": "HbA1c",
+          "value": 7.9,
+          "unit": "%",
+          "collected_at": "2025-12-05T09:17:18+00:00"
+        },
+        {
+          "name": "Glucose",
+          "value": 174,
+          "unit": "mg/dL",
+          "collected_at": "2025-12-09T08:17:18+00:00"
+        },
+        {
+          "name": "Microalbumin",
+          "value": 36,
+          "unit": "mg/g",
+          "collected_at": "2025-12-05T09:17:18+00:00"
+        }
+      ],
+      "imaging_history": [
+        {
+          "modality": "Retinal Screening",
+          "summary": "Background changes with annual follow-up planned",
+          "confidence": 0.85,
+          "captured_at": "2025-11-29T09:17:18+00:00"
+        }
+      ]
+    },
+    {
+      "patient_id": 2110,
+      "mrn": "NP-2110",
+      "name": "Roshan Tamang",
+      "age": 29,
+      "sex": "Male",
+      "city": "Hetauda",
+      "care_unit": "Observation",
+      "diagnosis": "Viral pneumonia follow-up",
+      "vitals": {
+        "heart_rate": 104,
+        "respiratory_rate": 22,
+        "systolic_bp": 106,
+        "temperature_c": 38.0,
+        "oxygen_saturation": 92,
+        "pain_score": 2
+      },
+      "medications": [
+        "Azithromycin",
+        "Paracetamol"
+      ],
+      "risk_flags": [
+        "Escalating oxygen requirement"
+      ],
+      "last_updated": "2025-12-09T08:56:18+00:00",
+      "labs": [
+        {
+          "name": "Lactate",
+          "value": 2.4,
+          "unit": "mmol/L",
+          "collected_at": "2025-12-09T07:42:18+00:00"
+        },
+        {
+          "name": "Glucose",
+          "value": 125,
+          "unit": "mg/dL",
+          "collected_at": "2025-12-09T07:42:18+00:00"
+        },
+        {
+          "name": "Creatinine",
+          "value": 1.0,
+          "unit": "mg/dL",
+          "collected_at": "2025-12-09T07:42:18+00:00"
+        }
+      ],
+      "imaging_history": [
+        {
+          "modality": "Chest X-Ray",
+          "summary": "Mild bilateral hazy opacification for follow-up",
+          "confidence": 0.83,
+          "captured_at": "2025-12-09T04:17:18+00:00"
+        }
+      ]
+    },
+    {
+      "patient_id": 2111,
+      "mrn": "NP-2111",
+      "name": "Menuka Adhikari",
+      "age": 57,
+      "sex": "Female",
+      "city": "Biratnagar",
+      "care_unit": "Step-down",
+      "diagnosis": "COPD stabilization",
+      "vitals": {
+        "heart_rate": 98,
+        "respiratory_rate": 21,
+        "systolic_bp": 124,
+        "temperature_c": 37.2,
+        "oxygen_saturation": 91,
+        "pain_score": 2
+      },
+      "medications": [
+        "Tiotropium",
+        "Prednisolone",
+        "Salbutamol"
+      ],
+      "risk_flags": [
+        "Low oxygen saturation baseline"
+      ],
+      "last_updated": "2025-12-09T08:42:18+00:00",
+      "labs": [
+        {
+          "name": "CO2",
+          "value": 28,
+          "unit": "mmol/L",
+          "collected_at": "2025-12-09T06:17:18+00:00"
+        },
+        {
+          "name": "Glucose",
+          "value": 133,
+          "unit": "mg/dL",
+          "collected_at": "2025-12-09T06:17:18+00:00"
+        },
+        {
+          "name": "Creatinine",
+          "value": 1.0,
+          "unit": "mg/dL",
+          "collected_at": "2025-12-09T06:17:18+00:00"
+        }
+      ],
+      "imaging_history": [
+        {
+          "modality": "Chest X-Ray",
+          "summary": "Hyperinflation pattern without new focal change",
+          "confidence": 0.87,
+          "captured_at": "2025-12-08T19:17:18+00:00"
+        }
+      ]
+    },
+    {
+      "patient_id": 2112,
+      "mrn": "NP-2112",
+      "name": "Suraj Maharjan",
+      "age": 44,
+      "sex": "Male",
+      "city": "Chitwan",
+      "care_unit": "Observation",
+      "diagnosis": "Renal function review",
+      "vitals": {
+        "heart_rate": 84,
+        "respiratory_rate": 17,
+        "systolic_bp": 134,
+        "temperature_c": 36.7,
+        "oxygen_saturation": 97,
+        "pain_score": 1
+      },
+      "medications": [
+        "Losartan",
+        "Amlodipine"
+      ],
+      "risk_flags": [
+        "Creatinine trend follow-up"
+      ],
+      "last_updated": "2025-12-09T08:19:18+00:00",
+      "labs": [
+        {
+          "name": "Creatinine",
+          "value": 1.6,
+          "unit": "mg/dL",
+          "collected_at": "2025-12-09T03:17:18+00:00"
+        },
+        {
+          "name": "Glucose",
+          "value": 108,
+          "unit": "mg/dL",
+          "collected_at": "2025-12-09T03:17:18+00:00"
+        },
+        {
+          "name": "Sodium",
+          "value": 139,
+          "unit": "mmol/L",
+          "collected_at": "2025-12-09T03:17:18+00:00"
+        }
+      ],
+      "imaging_history": [
+        {
+          "modality": "Renal Ultrasound",
+          "summary": "No acute obstructive pattern on review",
+          "confidence": 0.84,
+          "captured_at": "2025-12-07T09:17:18+00:00"
+        }
+      ]
+    }
+  ]
+}

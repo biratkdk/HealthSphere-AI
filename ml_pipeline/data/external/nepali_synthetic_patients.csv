@@ -1,0 +1,13 @@
+patient_id,mrn,name,age,sex,city,care_unit,diagnosis,heart_rate,respiratory_rate,systolic_bp,temperature_c,oxygen_saturation,pain_score,glucose,lactate,creatinine,hba1c,medications,risk_flags
+2101,NP-2101,Srijana Karki,58,Female,Kathmandu,ICU,Community-acquired pneumonia observation,109,25,98,38.1,91,3,141,2.6,1.3,,Ceftriaxone; Azithromycin; Paracetamol,Escalating oxygen requirement; Fever trend
+2102,NP-2102,Nabin Shrestha,46,Male,Pokhara,Telemetry,Hypertensive urgency review,82,17,164,36.9,97,1,118,,,,Amlodipine; Losartan; Aspirin,Blood pressure variability
+2103,NP-2103,Purnima Rai,32,Female,Dharan,Medical Ward,Postpartum infection watch,97,21,112,37.8,95,4,106,1.8,,,Amoxicillin-clavulanate; Ibuprofen,Recent fever; Postpartum monitoring
+2104,NP-2104,Bikash Gurung,61,Male,Bharatpur,Step-down,COPD exacerbation stabilization,101,23,126,37.3,90,2,129,,1.1,,Salbutamol; Tiotropium; Prednisolone,Baseline low oxygen saturation; Inhaler adherence review
+2105,NP-2105,Manisha Thapa,39,Female,Butwal,Endocrine Ward,Diabetes stabilization,76,16,122,36.7,98,1,182,,,8.1,Metformin; Insulin glargine; Lisinopril,Recent glucose variability
+2106,NP-2106,Ritesh Lama,27,Male,Lalitpur,Observation,Mild head injury follow-up,72,15,118,36.6,99,2,102,,0.9,,Paracetamol,Neurologic re-check
+2107,NP-2107,Aashika Bhandari,34,Female,Bhaktapur,Women's Health,Postpartum infection surveillance,89,18,114,37.5,97,3,96,,0.8,,Ibuprofen; Amoxicillin-clavulanate,Postpartum monitoring
+2108,NP-2108,Pradeep Koirala,64,Male,Janakpur,Telemetry,Preventive cardiology review,86,18,142,36.9,96,1,109,,,,Aspirin; Atorvastatin; Losartan,Elevated LDL
+2109,NP-2109,Sabina Magar,49,Female,Nepalgunj,Medical Ward,Diabetes pathway review,79,16,128,36.8,98,1,174,,,7.9,Metformin; Semaglutide,Glucose variability
+2110,NP-2110,Roshan Tamang,29,Male,Hetauda,Observation,Viral pneumonia follow-up,104,22,106,38.0,92,2,125,2.4,1.0,,Azithromycin; Paracetamol,Escalating oxygen requirement
+2111,NP-2111,Menuka Adhikari,57,Female,Biratnagar,Step-down,COPD stabilization,98,21,124,37.2,91,2,133,,1.0,,Tiotropium; Prednisolone; Salbutamol,Low oxygen saturation baseline
+2112,NP-2112,Suraj Maharjan,44,Male,Chitwan,Observation,Renal function review,84,17,134,36.7,97,1,108,,1.6,,Losartan; Amlodipine,Creatinine trend follow-up

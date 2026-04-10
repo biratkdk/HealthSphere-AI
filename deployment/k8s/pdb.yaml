@@ -1,0 +1,24 @@
+# HealthSphere AI — PodDisruptionBudgets
+# Ensures rolling updates and node drains never take all replicas offline.
+
+# Backend: always keep at least 1 pod available during disruptions
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: healthsphere-backend-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: healthsphere-backend
+---
+# Frontend: always keep at least 1 pod available
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: healthsphere-frontend-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: healthsphere-frontend

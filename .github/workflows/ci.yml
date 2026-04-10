@@ -1,0 +1,174 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Backend: lint, security scan, dependency audit, test
+  # ---------------------------------------------------------------------------
+  backend:
+    name: Backend (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install ruff bandit pytest-cov pip-audit
+
+      - name: Lint (ruff)
+        run: ruff check backend/ --output-format=github
+
+      - name: Format check (ruff)
+        run: ruff format backend/ --check
+
+      - name: Security scan (bandit)
+        run: bandit -r backend/ -ll -x backend/tests/ --quiet
+
+      - name: Dependency vulnerability audit (pip-audit)
+        run: pip-audit --requirement requirements.txt --progress-spinner off
+
+      - name: Run tests with coverage
+        run: |
+          pytest backend/tests -q \
+            --cov=backend \
+            --cov-report=xml \
+            --cov-report=term-missing \
+            --tb=short
+        env:
+          ENVIRONMENT: test
+          DATABASE_URL: "sqlite://"
+          JWT_SECRET_KEY: "ci-test-jwt-secret-key-32chars-long"
+          SESSION_SECRET_KEY: "ci-test-session-secret-key-32chars"
+          SERVICE_API_KEY: "ci-test-service-api-key"
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v4
+        if: github.event_name == 'push'
+        with:
+          file: ./coverage.xml
+          flags: backend
+          fail_ci_if_error: false
+
+  # ---------------------------------------------------------------------------
+  # Frontend: lint, type-check, build, dependency audit
+  # ---------------------------------------------------------------------------
+  frontend:
+    name: Frontend (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ["20"]
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Dependency vulnerability audit (npm audit)
+        run: npm audit --audit-level=high
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: http://localhost:8000
+
+  infra-validate:
+    name: Infrastructure validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install YAML linter
+        run: pip install yamllint
+
+      - name: Lint Kubernetes and compose manifests
+        run: |
+          yamllint deployment/k8s docker-compose.yml
+          docker compose -f docker-compose.yml config -q
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Validate Terraform
+        run: |
+          terraform -chdir=deployment/terraform fmt -check -recursive
+          terraform -chdir=deployment/terraform init -backend=false
+          terraform -chdir=deployment/terraform validate
+
+  # ---------------------------------------------------------------------------
+  # Container image scanning (runs on push to main only)
+  # ---------------------------------------------------------------------------
+  image-scan:
+    name: Container scan (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    strategy:
+      matrix:
+        include:
+          - target: backend
+            dockerfile: deployment/Dockerfile.backend
+          - target: frontend
+            dockerfile: deployment/Dockerfile.frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: |
+          docker build \
+            -f ${{ matrix.dockerfile }} \
+            -t healthsphere/${{ matrix.target }}:${{ github.sha }} \
+            .
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: healthsphere/${{ matrix.target }}:${{ github.sha }}
+          format: sarif
+          output: trivy-${{ matrix.target }}.sarif
+          severity: CRITICAL,HIGH
+          exit-code: 1
+          ignore-unfixed: true
+
+      - name: Upload Trivy SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-${{ matrix.target }}.sarif
+          category: trivy-${{ matrix.target }}

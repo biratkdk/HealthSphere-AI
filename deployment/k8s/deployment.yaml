@@ -1,0 +1,401 @@
+﻿apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: healthsphere-shared-storage
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: azurefile-csi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: healthsphere-redis
+  labels:
+    app: healthsphere-redis
+    app.kubernetes.io/part-of: healthsphere
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: healthsphere-redis
+  template:
+    metadata:
+      labels:
+        app: healthsphere-redis
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        fsGroup: 999
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports:
+            - containerPort: 6379
+          args:
+            - redis-server
+            - --appendonly
+            - "yes"
+            - --requirepass
+            - $(REDIS_PASSWORD)
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: healthsphere-secrets
+                  key: redis-password
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          livenessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: healthsphere-backend
+  labels:
+    app: healthsphere-backend
+    app.kubernetes.io/part-of: healthsphere
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: healthsphere-backend
+  template:
+    metadata:
+      labels:
+        app: healthsphere-backend
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: healthsphere-backend
+                topologyKey: kubernetes.io/hostname
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+      containers:
+        - name: backend
+          image: healthsphere/backend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: ["ALL"]
+          env:
+            - name: ENVIRONMENT
+              value: "production"
+            - name: ENFORCE_AUTH
+              value: "true"
+            - name: AUTO_MIGRATE
+              value: "false"
+            - name: TASK_EXECUTION_MODE
+              value: "celery"
+            - name: STORAGE_BACKEND
+              value: "auto"
+            - name: STORAGE_ROOT
+              value: /app/storage
+            - name: METRICS_ENABLED
+              value: "true"
+            - name: RATE_LIMIT_BACKEND
+              value: "redis"
+            - name: RATE_LIMIT_REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: healthsphere-secrets
+                  key: celery-broker-url
+            - name: SERVICE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: healthsphere-secrets
+                  key: service-api-key
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: healthsphere-secrets
+                  key: database-url
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: healthsphere-secrets
+                  key: jwt-secret-key
+            - name: SESSION_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: healthsphere-secrets
+                  key: session-secret-key
+            - name: CRON_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: healthsphere-secrets
+                  key: cron-secret
+            - name: BOOTSTRAP_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: healthsphere-secrets
+                  key: bootstrap-admin-password
+            - name: BOOTSTRAP_CLINICIAN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: healthsphere-secrets
+                  key: bootstrap-clinician-password
+            - name: BOOTSTRAP_ANALYST_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: healthsphere-secrets
+                  key: bootstrap-analyst-password
+            - name: CELERY_BROKER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: healthsphere-secrets
+                  key: celery-broker-url
+            - name: CELERY_RESULT_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  name: healthsphere-secrets
+                  key: celery-result-backend
+            - name: BLOB_READ_WRITE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: healthsphere-secrets
+                  key: blob-read-write-token
+                  optional: true
+          volumeMounts:
+            - name: shared-storage
+              mountPath: /app/storage
+          startupProbe:
+            httpGet:
+              path: /health/live
+              port: 8000
+            failureThreshold: 15
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 250m
+              memory: 384Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+      volumes:
+        - name: shared-storage
+          persistentVolumeClaim:
+            claimName: healthsphere-shared-storage
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: healthsphere-worker
+  labels:
+    app: healthsphere-worker
+    app.kubernetes.io/part-of: healthsphere
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: healthsphere-worker
+  template:
+    metadata:
+      labels:
+        app: healthsphere-worker
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+      containers:
+        - name: worker
+          image: healthsphere/backend:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - celery
+            - -A
+            - backend.app.workers.report_tasks:celery_app
+            - worker
+            - --loglevel=INFO
+            - --concurrency=2
+            - --time-limit=600
+            - --soft-time-limit=540
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: ["ALL"]
+          env:
+            - name: ENVIRONMENT
+              value: "production"
+            - name: AUTO_MIGRATE
+              value: "false"
+            - name: TASK_EXECUTION_MODE
+              value: "celery"
+            - name: STORAGE_BACKEND
+              value: "auto"
+            - name: STORAGE_ROOT
+              value: /app/storage
+            - name: RATE_LIMIT_BACKEND
+              value: "redis"
+            - name: RATE_LIMIT_REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: healthsphere-secrets
+                  key: celery-broker-url
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: healthsphere-secrets
+                  key: database-url
+            - name: CELERY_BROKER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: healthsphere-secrets
+                  key: celery-broker-url
+            - name: CELERY_RESULT_BACKEND
+              valueFrom:
+                secretKeyRef:
+                  name: healthsphere-secrets
+                  key: celery-result-backend
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: healthsphere-secrets
+                  key: jwt-secret-key
+            - name: BLOB_READ_WRITE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: healthsphere-secrets
+                  key: blob-read-write-token
+                  optional: true
+          volumeMounts:
+            - name: shared-storage
+              mountPath: /app/storage
+          livenessProbe:
+            exec:
+              command:
+                - bash
+                - -c
+                - celery -A backend.app.workers.report_tasks:celery_app inspect ping -d celery@$HOSTNAME
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            timeoutSeconds: 10
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 200m
+              memory: 384Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+      volumes:
+        - name: shared-storage
+          persistentVolumeClaim:
+            claimName: healthsphere-shared-storage
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: healthsphere-frontend
+  labels:
+    app: healthsphere-frontend
+    app.kubernetes.io/part-of: healthsphere
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: healthsphere-frontend
+  template:
+    metadata:
+      labels:
+        app: healthsphere-frontend
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: healthsphere-frontend
+                topologyKey: kubernetes.io/hostname
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+      containers:
+        - name: frontend
+          image: healthsphere/frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: ["ALL"]
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            failureThreshold: 10
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi

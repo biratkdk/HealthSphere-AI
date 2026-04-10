@@ -1,0 +1,49 @@
+{
+  "generated_at": "2025-12-09T09:17:18+00:00",
+  "synthetic": true,
+  "dataset": "ml_pipeline/data/external/nepali_synthetic_patients.json",
+  "flat_dataset": "ml_pipeline/data/external/nepali_synthetic_patients.csv",
+  "upload_images": [
+    {
+      "filename": "nepali_clear_demo.png",
+      "path": "ml_pipeline/data/raw/imaging/nepali_clear_demo.png",
+      "description": "Synthetic low-anomaly chest-style image for a routine upload test."
+    },
+    {
+      "filename": "nepali_opacity_demo.png",
+      "path": "ml_pipeline/data/raw/imaging/nepali_opacity_demo.png",
+      "description": "Synthetic review-style chest image with right lower lung opacity markers."
+    },
+    {
+      "filename": "nepali_nodule_demo.jpg",
+      "path": "ml_pipeline/data/raw/imaging/nepali_nodule_demo.jpg",
+      "description": "Synthetic review-style chest image with a focal upper-lung density."
+    },
+    {
+      "filename": "nepali_bilateral_demo.png",
+      "path": "ml_pipeline/data/raw/imaging/nepali_bilateral_demo.png",
+      "description": "Synthetic bilateral haze pattern for respiratory review demos."
+    },
+    {
+      "filename": "nepali_edema_demo.png",
+      "path": "ml_pipeline/data/raw/imaging/nepali_edema_demo.png",
+      "description": "Synthetic diffuse interstitial pattern for triage testing."
+    },
+    {
+      "filename": "nepali_followup_demo.jpg",
+      "path": "ml_pipeline/data/raw/imaging/nepali_followup_demo.jpg",
+      "description": "Synthetic follow-up image with a small resolving focal density."
+    },
+    {
+      "filename": "nepali_portable_demo.png",
+      "path": "ml_pipeline/data/raw/imaging/nepali_portable_demo.png",
+      "description": "Synthetic portable scan style image with subtle lower-zone review markers."
+    },
+    {
+      "filename": "nepali_triage_demo.jpg",
+      "path": "ml_pipeline/data/raw/imaging/nepali_triage_demo.jpg",
+      "description": "Synthetic triage image with multifocal review-worthy densities."
+    }
+  ],
+  "usage_note": "These assets are synthetic and intended for UI, API, and imaging upload validation."
+}

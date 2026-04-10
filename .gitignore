@@ -1,0 +1,54 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.pyc
+*.pyo
+*.pyd
+*.log
+.env
+node_modules/
+frontend/build/
+frontend/dist/
+coverage.xml
+htmlcov/
+ml_pipeline/models/artifacts/
+docs/generated/
+*.sqlite3
+*.db
+*.db-journal
+storage/
+var/
+.terraform/
+*.tfstate
+*.tfstate.*
+.DS_Store
+
+.vercel
+.env*.local
+
+# Live environment files — never commit
+.env.backend.live
+.env.frontend.live
+*.pem
+*.key
+*.crt
+secrets/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+desktop.ini
+Thumbs.db
+
+# Terraform lock
+.terraform.lock.hcl
+
+# Agent/session scratch files
+memory.md
+agent.md
+context.md
+skills.md

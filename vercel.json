@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api/index"
+    }
+  ],
+  "functions": {
+    "api/**/*.py": {
+      "maxDuration": 60,
+      "excludeFiles": "{.venv/**,frontend/**,docs/**,deployment/**,airflow/**,backend/tests/**,ml_pipeline/data/**,ml_pipeline/notebooks/**,ml_pipeline/training/**,scripts/**,.pytest_cache/**,__pycache__/**}"
+    }
+  }
+}

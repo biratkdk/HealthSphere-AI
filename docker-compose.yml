@@ -1,0 +1,164 @@
+version: "3.9"
+
+# ---------------------------------------------------------------------------
+# HealthSphere AI — local Docker Compose stack
+#
+# Secrets are read from a real .env file (never from .env.example).
+# Copy .env.example → .env and fill in all required values before running.
+# ---------------------------------------------------------------------------
+
+x-backend-base: &backend-base
+  build:
+    context: .
+    dockerfile: deployment/Dockerfile.backend
+  env_file:
+    - .env                    # ← real .env only; never commit this file
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  volumes:
+    - healthsphere_storage:/app/storage
+  restart: unless-stopped
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: healthsphere
+      POSTGRES_USER: healthsphere
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-change-me-in-dotenv}
+    ports:
+      - "5432:5432"
+    volumes:
+      - healthsphere_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthsphere -d healthsphere"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Redis
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:-change-me-in-dotenv}"]
+    volumes:
+      - healthsphere_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-change-me-in-dotenv}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # API server
+  # ---------------------------------------------------------------------------
+  backend:
+    <<: *backend-base
+    environment:
+      DATABASE_URL: postgresql+psycopg://healthsphere:${DB_PASSWORD:-change-me-in-dotenv}@db:5432/healthsphere
+      TASK_EXECUTION_MODE: celery
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-change-me-in-dotenv}@redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-change-me-in-dotenv}@redis:6379/1
+      STORAGE_ROOT: /app/storage
+      ENVIRONMENT: production
+    ports:
+      - "8000:8000"
+    networks:
+      default:
+        aliases:
+          - healthsphere-backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/health/live"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  # Celery worker
+  # ---------------------------------------------------------------------------
+  worker:
+    <<: *backend-base
+    environment:
+      DATABASE_URL: postgresql+psycopg://healthsphere:${DB_PASSWORD:-change-me-in-dotenv}@db:5432/healthsphere
+      TASK_EXECUTION_MODE: celery
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-change-me-in-dotenv}@redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-change-me-in-dotenv}@redis:6379/1
+      STORAGE_ROOT: /app/storage
+      ENVIRONMENT: production
+    command: [
+      "celery", "-A", "backend.app.workers.report_tasks:celery_app",
+      "worker",
+      "--loglevel=INFO",
+      "--concurrency=2",
+      "--time-limit=600",
+      "--soft-time-limit=540"
+    ]
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A backend.app.workers.report_tasks:celery_app inspect ping -d celery@$$HOSTNAME || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  # Celery Flower (monitoring UI) — do not expose in production
+  # ---------------------------------------------------------------------------
+  flower:
+    <<: *backend-base
+    environment:
+      DATABASE_URL: postgresql+psycopg://healthsphere:${DB_PASSWORD:-change-me-in-dotenv}@db:5432/healthsphere
+      TASK_EXECUTION_MODE: celery
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-change-me-in-dotenv}@redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-change-me-in-dotenv}@redis:6379/1
+    command: [
+      "celery", "-A", "backend.app.workers.report_tasks:celery_app",
+      "flower",
+      "--port=5555",
+      "--url_prefix=flower"
+    ]
+    ports:
+      - "127.0.0.1:5555:5555"    # Bind to loopback only — not public
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------------------
+  # Frontend (NGINX)
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: .
+      dockerfile: deployment/Dockerfile.frontend
+      args:
+        VITE_API_BASE_URL: /
+    ports:
+      - "3000:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  healthsphere_postgres:
+  healthsphere_redis:
+  healthsphere_storage:
