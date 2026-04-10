@@ -47,8 +47,4 @@ Thumbs.db
 # Terraform lock
 .terraform.lock.hcl
 
-# Agent/session scratch files
-/.claude/
-/Project_Report.pdf
-
-.vercel
+# Local developer-only scratch paths belong in .git/info/exclude

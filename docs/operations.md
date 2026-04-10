@@ -7,7 +7,7 @@
   - POSIX shells: `source .venv/bin/activate`
   - Windows PowerShell: `.\.venv\Scripts\Activate.ps1`
 - keep `.env` local and do not commit it
-- for broader workspace context and contributor rules, also read `agent.md`, `context.md`, `memory.md`, and `skills.md`
+- use the architecture, deployment, and security guides for broader system context
 
 ## Service priorities
 

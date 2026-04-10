@@ -1,6 +1,6 @@
 # HealthSphere AI
 
-HealthSphere AI is a full-stack clinical intelligence platform for patient risk review, imaging triage, report orchestration, care coordination, analytics, and governance. The repository is structured as a deployable product rather than a disconnected demo: the frontend, API, persistence layer, background execution path, ML artifacts, documentation, and delivery assets all ship together.
+HealthSphere AI is a full-stack clinical operations platform for patient risk review, imaging triage, report orchestration, care coordination, analytics, and governance. The repository is structured as a deployable product rather than a disconnected demo: the frontend, API, persistence layer, background execution path, ML artifacts, documentation, and delivery assets all ship together.
 
 ## What the product includes
 
@@ -27,11 +27,6 @@ HealthSphere AI is a full-stack clinical intelligence platform for patient risk 
 |-- docs/                   # Architecture, API, deployment, operations, security, runbooks
 |-- scripts/                # Smoke tests and synthetic demo-data generation
 |-- alembic/                # Migration history
-|-- agent.md                # Working rules for humans and AI agents
-|-- context.md              # Current architecture, risks, and project context
-|-- memory.md               # Durable workspace facts and operational memory
-|-- skills.md               # Skill map and contributor guidance
-|-- todo.md                 # Premium roadmap and implementation backlog
 |-- docker-compose.yml
 |-- requirements.txt
 `-- vercel.json
@@ -45,7 +40,7 @@ HealthSphere AI is a full-stack clinical intelligence platform for patient risk 
 4. Imaging uploads and report artifacts are stored through a pluggable storage layer.
 5. The ML runtime loads the packaged model artifacts directly and only falls back to governed deterministic scoring if an artifact cannot be loaded or executed safely.
 
-Detailed design notes live in [architecture.md](d:/HealthSphere%20AI/docs/architecture.md).
+Detailed design notes live in [architecture.md](docs/architecture.md).
 
 ## Quick start
 
@@ -185,10 +180,10 @@ Bootstrap users are created on first start if no users exist. Replace the defaul
 
 The repository ships with synthetic Nepali patient records and imaging assets. Startup seeding imports the bundled patient pack so the dashboard has a richer working set out of the box:
 
-- seeded application patients in [seed_data.py](d:/HealthSphere%20AI/backend/app/db/seed_data.py)
-- external sample datasets in [nepali_synthetic_patients.json](d:/HealthSphere%20AI/ml_pipeline/data/external/nepali_synthetic_patients.json)
-- flat CSV export in [nepali_synthetic_patients.csv](d:/HealthSphere%20AI/ml_pipeline/data/external/nepali_synthetic_patients.csv)
-- upload-ready images listed in [nepali_demo_manifest.json](d:/HealthSphere%20AI/ml_pipeline/data/external/nepali_demo_manifest.json)
+- seeded application patients in [seed_data.py](backend/app/db/seed_data.py)
+- external sample datasets in [nepali_synthetic_patients.json](ml_pipeline/data/external/nepali_synthetic_patients.json)
+- flat CSV export in [nepali_synthetic_patients.csv](ml_pipeline/data/external/nepali_synthetic_patients.csv)
+- upload-ready images listed in [nepali_demo_manifest.json](ml_pipeline/data/external/nepali_demo_manifest.json)
 
 To regenerate the external demo pack:
 
@@ -248,19 +243,13 @@ python scripts/smoke_test.py --base-url http://localhost:8000 --username clinici
 
 ## Documentation index
 
-- [Agent guide](d:/HealthSphere%20AI/agent.md)
-- [Project context](d:/HealthSphere%20AI/context.md)
-- [Project memory](d:/HealthSphere%20AI/memory.md)
-- [Skills map](d:/HealthSphere%20AI/skills.md)
-- [Premium todo](d:/HealthSphere%20AI/todo.md)
-- [Architecture](d:/HealthSphere%20AI/docs/architecture.md)
-- [API documentation](d:/HealthSphere%20AI/docs/api_docs.md)
-- [Deployment guide](d:/HealthSphere%20AI/docs/deployment.md)
-- [Operations guide](d:/HealthSphere%20AI/docs/operations.md)
-- [Presentation audit](d:/HealthSphere%20AI/docs/presentation_audit.md)
-- [Population and imaging sprint](d:/HealthSphere%20AI/docs/population_imaging_sprint.md)
-- [Security notes](d:/HealthSphere%20AI/docs/security.md)
-- [ML pipeline](d:/HealthSphere%20AI/docs/ml_pipeline.md)
-- [User manual](d:/HealthSphere%20AI/docs/user_manual.md)
-- [Incident runbook](d:/HealthSphere%20AI/docs/runbooks/incident-response.md)
-- [Model rollback runbook](d:/HealthSphere%20AI/docs/runbooks/model-rollback.md)
+- [Architecture](docs/architecture.md)
+- [API documentation](docs/api_docs.md)
+- [Deployment guide](docs/deployment.md)
+- [Operations guide](docs/operations.md)
+- [Security notes](docs/security.md)
+- [ML pipeline](docs/ml_pipeline.md)
+- [User manual](docs/user_manual.md)
+- [Project report](docs/project_report.md)
+- [Incident runbook](docs/runbooks/incident-response.md)
+- [Model rollback runbook](docs/runbooks/model-rollback.md)

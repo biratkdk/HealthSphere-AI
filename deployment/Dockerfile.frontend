@@ -1,4 +1,4 @@
-﻿# HealthSphere AI frontend image
+# HealthSphere AI frontend image
 # Multi-stage build: Vite generates static assets and NGINX serves them as a
 # non-root process on port 8080.
 

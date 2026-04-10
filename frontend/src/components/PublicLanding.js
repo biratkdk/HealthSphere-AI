@@ -348,7 +348,7 @@ const PublicLanding = ({ theme, setTheme }) => {
         <section className="public-section public-index-section" id="index">
           <div className="public-section-heading public-section-heading-wide">
             <p className="public-mono-label">Platform index</p>
-            <h2>The product lanes are richer than the reference app, but aligned to HealthSphere&apos;s real core.</h2>
+            <h2>The product lanes are richer than the reference app, but aligned to HealthSphere AI&apos;s real core.</h2>
             <p>
               This is not a wellness dashboard or a generic education site. The feature system is organized around
               clinical operations: patient control, ownership, imaging, reports, governance, and the next population
