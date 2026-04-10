@@ -29,15 +29,43 @@ const Dashboard = ({
   onNotificationRead,
 }) => {
   if (loading) {
-    return <section className="panel">Loading care operations view...</section>;
+    return (
+      <div className="page-grid dashboard-grid">
+        <section className="panel loading-panel" style={{ gridColumn: "1 / -1" }}>
+          <div className="spinner" />
+          <p>Loading care operations&hellip;</p>
+        </section>
+        {[...Array(5)].map((_, i) => (
+          <section key={i} className="panel" style={{ gridColumn: i === 0 ? "span 12" : "span 6" }}>
+            <div className="skeleton skeleton-block" />
+            <div className="skeleton skeleton-line wide" />
+            <div className="skeleton skeleton-line medium" />
+            <div className="skeleton skeleton-line short" />
+          </section>
+        ))}
+      </div>
+    );
   }
 
   if (error) {
-    return <section className="panel error-panel">{error}</section>;
+    return (
+      <section className="panel error-panel" style={{ gridColumn: "1 / -1" }}>
+        <strong className="error-text">Unable to load dashboard</strong>
+        <p>{error}</p>
+        <button className="secondary-button small-button" type="button" onClick={() => window.location.reload()}>
+          Reload
+        </button>
+      </section>
+    );
   }
 
   if (!summary) {
-    return <section className="panel">No patient summary available.</section>;
+    return (
+      <section className="panel loading-panel">
+        <div className="spinner" />
+        <p>Waiting for patient data&hellip;</p>
+      </section>
+    );
   }
 
   const roster = patients.slice(0, 8);

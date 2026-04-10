@@ -171,14 +171,22 @@ export const useDashboardData = (initialPatientId = null) => {
     summaryLoading ||
     (canViewModels && modelsLoading);
 
+  // Suppress 401 errors here — the AuthContext event listener handles those by
+  // clearing the user and redirecting to login. Showing them on the dashboard
+  // produces confusing "User is not available." messages.
+  const _dashboardError = (err) => {
+    if (err?.response?.status === 401) return "";
+    return getRequestErrorMessage(err, "");
+  };
+
   const error =
-    getRequestErrorMessage(patientsError, "") ||
-    getRequestErrorMessage(summaryError, "") ||
-    getRequestErrorMessage(analyticsError, "") ||
-    getRequestErrorMessage(alertsError, "") ||
-    getRequestErrorMessage(notificationsError, "") ||
-    getRequestErrorMessage(reportJobsError, "") ||
-    getRequestErrorMessage(modelsError, "") ||
+    _dashboardError(patientsError) ||
+    _dashboardError(summaryError) ||
+    _dashboardError(analyticsError) ||
+    _dashboardError(alertsError) ||
+    _dashboardError(notificationsError) ||
+    _dashboardError(reportJobsError) ||
+    _dashboardError(modelsError) ||
     "";
 
   return {

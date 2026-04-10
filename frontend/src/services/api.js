@@ -100,6 +100,11 @@ api.interceptors.response.use(
       return api(original);
     } catch (refreshError) {
       _processQueue(refreshError);
+      // Notify AuthContext that the session is fully expired so the UI can
+      // redirect to login instead of showing stale 401 errors on the dashboard.
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("auth:session-expired"));
+      }
       return Promise.reject(refreshError);
     } finally {
       _isRefreshing = false;

@@ -19,6 +19,15 @@ export const AuthProvider = ({ children }) => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
+  // When the axios interceptor exhausts both access + refresh tokens it fires
+  // this event so we can clear auth state without needing a direct reference
+  // into AuthContext from the API module.
+  useEffect(() => {
+    const handleExpired = () => setUser(null);
+    window.addEventListener("auth:session-expired", handleExpired);
+    return () => window.removeEventListener("auth:session-expired", handleExpired);
+  }, []);
+
   useEffect(() => {
     let ignore = false;
 

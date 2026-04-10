@@ -69,8 +69,11 @@ const App = () => {
 
   if (loading && location.pathname !== "/auth/callback") {
     return (
-      <div className="shell">
-        <section className="panel">Loading secure session...</section>
+      <div className="shell login-shell">
+        <section className="panel loading-panel">
+          <div className="spinner" />
+          <p>Verifying session&hellip;</p>
+        </section>
       </div>
     );
   }
@@ -124,7 +127,7 @@ const App = () => {
 
       <main className="app-main">
         <RouteErrorBoundary>
-        <Suspense fallback={<section className="panel">Loading workspace...</section>}>
+        <Suspense fallback={<section className="panel loading-panel"><div className="spinner" /><p>Loading workspace&hellip;</p></section>}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/patients" element={<Patients />} />
