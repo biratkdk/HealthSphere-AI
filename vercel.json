@@ -5,7 +5,7 @@
   "outputDirectory": "frontend/dist",
 
   "functions": {
-    "api/**/*.py": {
+    "api/index.py": {
       "maxDuration": 60,
       "excludeFiles": "{.venv/**,frontend/**,docs/**,deployment/**,airflow/**,backend/tests/**,ml_pipeline/data/**,ml_pipeline/notebooks/**,ml_pipeline/training/**,scripts/**,.pytest_cache/**,__pycache__/**}"
     }
