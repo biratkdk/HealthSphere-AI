@@ -1,23 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
 
-  "builds": [
-    {
-      "src": "api/index.py",
-      "use": "@vercel/python",
-      "config": { "maxDuration": 60 }
-    },
-    {
-      "src": "frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": { "distDir": "dist" }
-    }
-  ],
-
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/index.py" },
-    { "handle": "filesystem" },
-    { "src": "/(.*)",     "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/api/index" }
   ],
 
   "env": {
@@ -28,11 +13,5 @@
     "SEED_DEMO_DATA":           "true",
     "SECURITY_HEADERS_ENABLED": "true",
     "METRICS_ENABLED":          "false"
-  },
-
-  "build": {
-    "env": {
-      "VITE_API_BASE_URL": ""
-    }
   }
 }
