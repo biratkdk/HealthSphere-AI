@@ -19,7 +19,6 @@ from backend.app.db.enterprise_repository import create_audit_log
 from backend.app.db.repository import init_db, prune_audit_logs, prune_notifications, prune_report_jobs, seed_database
 from backend.app.db.session import SessionLocal
 from backend.app.routes import public_router, secured_router
-from backend.app.services.model_runtime import get_model_runtime
 from backend.app.services.storage import get_storage_service
 
 _bootstrapped = False
@@ -52,7 +51,6 @@ def bootstrap_application() -> None:
         prune_audit_logs(db, settings.audit_log_retention_days)
 
     get_storage_service().ensure_ready()
-    get_model_runtime().load_artifacts()
     _bootstrapped = True
 
 
