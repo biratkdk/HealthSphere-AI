@@ -9,13 +9,26 @@ from datetime import UTC, datetime
 from functools import lru_cache
 from pathlib import Path
 from statistics import mean
+from typing import Any
 
 _log = logging.getLogger("healthsphere.model_runtime")
 
-import joblib
-import numpy as np
-import pandas as pd
-from PIL import Image
+try:
+    import joblib
+except ImportError:  # pragma: no cover - optional runtime dependency
+    joblib = None
+
+try:
+    import numpy as np
+except ImportError:  # pragma: no cover - optional runtime dependency
+    np = None
+
+try:
+    import pandas as pd
+except ImportError:  # pragma: no cover - optional runtime dependency
+    pd = None
+
+from PIL import Image, ImageStat
 from pydicom import dcmread
 
 from backend.app.models import (
@@ -117,6 +130,11 @@ class ModelRuntime:
                 continue
             state.notes.clear()
             state.load_attempted = True
+            if joblib is None:
+                state.model = None
+                state.loaded_at = None
+                state.notes.append("Joblib is not installed in this runtime; deterministic fallback scoring is active.")
+                continue
             if not state.artifact_path.exists():
                 state.model = None
                 state.loaded_at = None
@@ -263,7 +281,7 @@ class ModelRuntime:
             "lactate",
             "creatinine",
         ]
-        features = pd.DataFrame([self._icu_features(patient)], columns=feature_columns)
+        features = self._feature_frame(self._icu_features(patient), feature_columns)
         if state.model is not None:
             try:
                 return round(_clamp(float(state.model.predict_proba(features)[0][1])), 2)
@@ -291,7 +309,7 @@ class ModelRuntime:
         if isinstance(state.model, dict):
             try:
                 feature_columns = state.model.get("feature_columns", [])
-                feature_frame = pd.DataFrame([self._disease_features(patient)], columns=feature_columns)
+                feature_frame = self._feature_frame(self._disease_features(patient), feature_columns)
                 diabetes_risk = float(state.model["models"]["diabetes"].predict_proba(feature_frame)[0][1])
                 heart_risk = float(state.model["models"]["heart"].predict_proba(feature_frame)[0][1])
                 sepsis_risk = float(state.model["models"]["sepsis"].predict_proba(feature_frame)[0][1])
@@ -327,7 +345,7 @@ class ModelRuntime:
         if isinstance(state.model, dict):
             try:
                 feature_columns = state.model.get("feature_columns", [])
-                feature_frame = pd.DataFrame([self._treatment_features(patient, disease_risk)], columns=feature_columns)
+                feature_frame = self._feature_frame(self._treatment_features(patient, disease_risk), feature_columns)
                 prediction = int(state.model["model"].predict(feature_frame)[0])
                 action_bundles = state.model["class_actions"]
                 predicted = action_bundles.get(prediction, [])
@@ -391,16 +409,18 @@ class ModelRuntime:
     def _image_features(self, payload: bytes, filename: str = "uploaded-image") -> list[float]:
         image = self._load_imaging_image(payload, filename)
         resized = image.convert("RGB").resize((32, 32))
-        data = np.asarray(resized) / 255.0
+        stats = ImageStat.Stat(resized)
         return [
-            float(data[:, :, 0].mean()),
-            float(data[:, :, 1].mean()),
-            float(data[:, :, 2].mean()),
-            float(data.std()),
+            round(stats.mean[0] / 255.0, 4),
+            round(stats.mean[1] / 255.0, 4),
+            round(stats.mean[2] / 255.0, 4),
+            round(sum(stats.stddev) / (len(stats.stddev) * 255.0), 4),
         ]
 
     def _load_imaging_image(self, payload: bytes, filename: str) -> Image.Image:
         if filename.lower().endswith(".dcm") or payload[128:132] == b"DICM":
+            if np is None:
+                raise RuntimeError("NumPy is unavailable for DICOM pixel extraction in this runtime.")
             dataset = dcmread(io.BytesIO(payload), force=True)
             pixels = np.asarray(dataset.pixel_array, dtype=np.float32)
             if pixels.ndim == 3 and pixels.shape[0] in {3, 4} and pixels.shape[-1] not in {3, 4}:
@@ -425,13 +445,18 @@ class ModelRuntime:
         with Image.open(io.BytesIO(payload)) as image:
             return image.copy()
 
-    def _normalize_pixel_array(self, pixels: np.ndarray) -> np.ndarray:
+    def _normalize_pixel_array(self, pixels: Any) -> Any:
         minimum = float(np.min(pixels))
         maximum = float(np.max(pixels))
         if maximum <= minimum:
             return np.zeros_like(pixels, dtype=np.uint8)
         scaled = ((pixels - minimum) / (maximum - minimum)) * 255.0
         return np.clip(scaled, 0, 255).astype(np.uint8)
+
+    def _feature_frame(self, values: list[float], columns: list[str]) -> object:
+        if pd is None:
+            return [values]
+        return pd.DataFrame([values], columns=columns)
 
     def _icu_drivers(self, patient: PatientRecord) -> list[str]:
         drivers: list[str] = []

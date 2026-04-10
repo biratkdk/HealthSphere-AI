@@ -57,6 +57,8 @@ source .venv/bin/activate   # POSIX shells
 # or on Windows PowerShell:
 # .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+# or for the full local/dev stack with tests, workers, and optional ML extras:
+# pip install -r requirements-dev.txt
 uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -83,6 +85,7 @@ The compose stack provisions PostgreSQL, Redis, the backend API, a Celery worker
 - prefer the repo venv for Python commands:
   - activated shell: `python ...`
   - direct invocation on Windows PowerShell: `.\.venv\Scripts\python.exe ...`
+- Vercel backend deploys use the slimmer runtime `requirements.txt`; local development should prefer `requirements-dev.txt`
 - this workspace may contain generated local state such as `.db` files, `storage/`, `frontend/dist/`, and `frontend/node_modules/`
 
 ## Configuration
