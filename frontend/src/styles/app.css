@@ -725,6 +725,223 @@ a:focus-visible {
   align-items: end;
 }
 
+.mission-control-panel {
+  display: grid;
+  gap: 20px;
+  background:
+    radial-gradient(circle at top right, rgba(11, 111, 112, 0.12), transparent 36%),
+    linear-gradient(180deg, rgba(19, 38, 47, 0.03), rgba(19, 38, 47, 0.01));
+}
+
+.mission-control-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.mission-control-meta,
+.workflow-tag-row,
+.workflow-task-meta,
+.mission-action-meta,
+.workflow-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mission-control-meta {
+  justify-content: flex-end;
+}
+
+.workflow-stat-grid,
+.mission-control-grid,
+.mission-form-grid,
+.handoff-section-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.workflow-stat-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.workflow-stat-card,
+.mission-card,
+.workflow-handoff-row {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+
+.workflow-stat-card {
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.workflow-stat-card span,
+.handoff-section span {
+  display: block;
+  color: var(--muted);
+}
+
+.workflow-stat-card strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 1.35rem;
+}
+
+.workflow-stat-low {
+  background: linear-gradient(180deg, rgba(11, 111, 112, 0.08), rgba(255, 255, 255, 0.92));
+}
+
+.workflow-stat-medium {
+  background: linear-gradient(180deg, rgba(208, 160, 72, 0.12), rgba(255, 255, 255, 0.92));
+}
+
+.workflow-stat-high {
+  background: linear-gradient(180deg, rgba(202, 103, 76, 0.1), rgba(255, 255, 255, 0.92));
+}
+
+.workflow-stat-critical {
+  background: linear-gradient(180deg, rgba(162, 63, 63, 0.12), rgba(255, 255, 255, 0.92));
+}
+
+.mission-control-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mission-column {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.mission-column h4 {
+  margin: 0;
+}
+
+.mission-card-list {
+  display: grid;
+  gap: 12px;
+}
+
+.mission-card {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.mission-card strong {
+  line-height: 1.35;
+}
+
+.mission-card-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 5px 10px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(19, 38, 47, 0.06);
+  color: var(--muted);
+}
+
+.mission-card-low {
+  border-color: rgba(11, 111, 112, 0.16);
+  background: linear-gradient(180deg, rgba(11, 111, 112, 0.07), rgba(255, 255, 255, 0.9));
+}
+
+.mission-card-medium {
+  border-color: rgba(208, 160, 72, 0.18);
+  background: linear-gradient(180deg, rgba(208, 160, 72, 0.09), rgba(255, 255, 255, 0.9));
+}
+
+.mission-card-high {
+  border-color: rgba(202, 103, 76, 0.18);
+  background: linear-gradient(180deg, rgba(202, 103, 76, 0.08), rgba(255, 255, 255, 0.9));
+}
+
+.mission-card-critical {
+  border-color: rgba(162, 63, 63, 0.22);
+  background: linear-gradient(180deg, rgba(162, 63, 63, 0.11), rgba(255, 255, 255, 0.9));
+}
+
+.mission-action-meta,
+.workflow-task-meta {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.mission-form-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.workflow-task-row {
+  gap: 18px;
+  align-items: stretch;
+}
+
+.workflow-task-copy {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.workflow-task-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.workflow-tag-row {
+  justify-content: flex-end;
+}
+
+.workflow-actions {
+  justify-content: flex-end;
+  min-width: 180px;
+}
+
+.workflow-task-overdue,
+.workflow-task-due_soon,
+.workflow-task-unscheduled {
+  border-color: rgba(19, 38, 47, 0.12);
+}
+
+.workflow-task-overdue {
+  border-color: rgba(162, 63, 63, 0.28);
+  background: linear-gradient(180deg, rgba(162, 63, 63, 0.06), rgba(255, 255, 255, 0.92));
+}
+
+.workflow-task-due_soon {
+  border-color: rgba(208, 160, 72, 0.22);
+  background: linear-gradient(180deg, rgba(208, 160, 72, 0.06), rgba(255, 255, 255, 0.92));
+}
+
+.workflow-task-unscheduled {
+  border-color: rgba(202, 103, 76, 0.18);
+}
+
+.workflow-handoff-row {
+  background: linear-gradient(180deg, rgba(11, 111, 112, 0.05), rgba(255, 255, 255, 0.92));
+}
+
+.handoff-section-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.handoff-section {
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(19, 38, 47, 0.04);
+}
+
 .timeline-list,
 .directory-grid {
   display: grid;
@@ -1366,6 +1583,8 @@ a:focus-visible {
   }
 
   .app-header {
+    position: static;
+    top: auto;
     gap: 18px;
     padding: 18px;
   }
@@ -1417,8 +1636,27 @@ a:focus-visible {
   .profile-glance-grid,
   .risk-grid,
   .report-queue-grid,
-  .registry-meta-grid {
+  .registry-meta-grid,
+  .mission-control-grid,
+  .mission-form-grid,
+  .handoff-section-grid {
     grid-template-columns: 1fr;
+  }
+
+  .workflow-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mission-control-head,
+  .workflow-task-top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .mission-control-meta,
+  .workflow-tag-row,
+  .workflow-actions {
+    justify-content: flex-start;
   }
 
   .panel,
@@ -1432,14 +1670,20 @@ a:focus-visible {
 
 @media (max-width: 720px) {
   .shell {
-    padding: 14px 14px calc(92px + env(safe-area-inset-bottom));
+    padding: 14px 14px calc(152px + env(safe-area-inset-bottom));
   }
 
   .app-header {
+    position: static;
+    top: auto;
     margin-bottom: 18px;
     padding: 14px;
     border-radius: 24px;
     gap: 14px;
+  }
+
+  .app-main {
+    padding-bottom: calc(152px + env(safe-area-inset-bottom));
   }
 
   .brand-block h1 {
@@ -1461,8 +1705,8 @@ a:focus-visible {
     bottom: calc(12px + env(safe-area-inset-bottom));
     z-index: 20;
     display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(72px, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-flow: row;
     gap: 8px;
     padding: 10px;
     border: 1px solid var(--line);
@@ -1470,13 +1714,6 @@ a:focus-visible {
     background: rgba(255, 255, 255, 0.82);
     backdrop-filter: blur(16px);
     box-shadow: 0 20px 36px rgba(19, 38, 47, 0.14);
-    overflow-x: auto;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-
-  .mobile-tabbar::-webkit-scrollbar {
-    display: none;
   }
 
   .mobile-tabbar a {
@@ -1484,12 +1721,16 @@ a:focus-visible {
     justify-content: center;
     align-items: center;
     min-height: 46px;
+    min-width: 0;
     padding: 10px 8px;
     border-radius: 16px;
     color: var(--muted);
     text-align: center;
     font-size: 0.83rem;
     font-weight: 600;
+    line-height: 1.15;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .mobile-tabbar a.active {
@@ -1517,7 +1758,9 @@ a:focus-visible {
   .notification-top,
   .queue-row,
   .audit-row-top,
-  .audit-meta {
+  .audit-meta,
+  .mission-control-head,
+  .workflow-task-top {
     flex-direction: column;
     align-items: flex-start;
   }
@@ -1546,13 +1789,25 @@ a:focus-visible {
     align-items: stretch;
   }
 
-  .task-form-row {
+  .task-form-row,
+  .workflow-stat-grid {
     grid-template-columns: 1fr;
   }
 
   .hero-search-field {
     min-width: 0;
     max-width: none;
+  }
+
+  .mission-control-meta,
+  .workflow-tag-row,
+  .workflow-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .workflow-actions {
+    min-width: 0;
   }
 }
 
@@ -1577,6 +1832,54 @@ a:focus-visible {
 [data-theme="dark"] .panel:hover,
 [data-theme="dark"] .hero-panel:hover {
   border-color: rgba(11, 111, 112, 0.22);
+}
+
+[data-theme="dark"] .mission-control-panel {
+  background:
+    radial-gradient(circle at top right, rgba(74, 219, 210, 0.18), transparent 34%),
+    linear-gradient(180deg, rgba(5, 19, 24, 0.92), rgba(8, 14, 18, 0.84));
+}
+
+[data-theme="dark"] .workflow-stat-card,
+[data-theme="dark"] .mission-card,
+[data-theme="dark"] .workflow-handoff-row,
+[data-theme="dark"] .handoff-section {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .workflow-stat-low {
+  background: linear-gradient(180deg, rgba(74, 219, 210, 0.16), rgba(255, 255, 255, 0.03));
+}
+
+[data-theme="dark"] .workflow-stat-medium,
+[data-theme="dark"] .mission-card-medium {
+  background: linear-gradient(180deg, rgba(208, 160, 72, 0.18), rgba(255, 255, 255, 0.03));
+}
+
+[data-theme="dark"] .workflow-stat-high,
+[data-theme="dark"] .mission-card-high {
+  background: linear-gradient(180deg, rgba(202, 103, 76, 0.18), rgba(255, 255, 255, 0.03));
+}
+
+[data-theme="dark"] .workflow-stat-critical,
+[data-theme="dark"] .mission-card-critical,
+[data-theme="dark"] .workflow-task-overdue {
+  background: linear-gradient(180deg, rgba(162, 63, 63, 0.2), rgba(255, 255, 255, 0.03));
+}
+
+[data-theme="dark"] .mission-card-low,
+[data-theme="dark"] .workflow-handoff-row {
+  background: linear-gradient(180deg, rgba(74, 219, 210, 0.12), rgba(255, 255, 255, 0.03));
+}
+
+[data-theme="dark"] .workflow-task-due_soon {
+  background: linear-gradient(180deg, rgba(208, 160, 72, 0.14), rgba(255, 255, 255, 0.03));
+}
+
+[data-theme="dark"] .mission-card-tag {
+  background: rgba(255, 255, 255, 0.08);
+  color: #c8dde5;
 }
 
 [data-theme="dark"] .metric-card-low {
@@ -1640,14 +1943,19 @@ a:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
+  min-width: 40px;
   height: 40px;
+  padding: 0 12px;
   border-radius: 14px;
   border: 1px solid var(--line);
   background: var(--btn-secondary-bg);
   color: var(--muted);
   cursor: pointer;
-  font-size: 1.1rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1;
   flex-shrink: 0;
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.18s ease;
 }

@@ -25,6 +25,11 @@ HealthSphere AI is a full-stack clinical intelligence platform for patient risk 
 |-- docs/                   # Architecture, API, deployment, operations, security, runbooks
 |-- scripts/                # Smoke tests and synthetic demo-data generation
 |-- alembic/                # Migration history
+|-- agent.md                # Working rules for humans and AI agents
+|-- context.md              # Current architecture, risks, and project context
+|-- memory.md               # Durable workspace facts and operational memory
+|-- skills.md               # Skill map and contributor guidance
+|-- todo.md                 # Premium roadmap and implementation backlog
 |-- docker-compose.yml
 |-- requirements.txt
 `-- vercel.json
@@ -46,7 +51,9 @@ Detailed design notes live in [architecture.md](d:/HealthSphere%20AI/docs/archit
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate   # POSIX shells
+# or on Windows PowerShell:
+# .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 ```
@@ -66,6 +73,15 @@ docker compose up --build
 ```
 
 The compose stack provisions PostgreSQL, Redis, the backend API, a Celery worker, Flower, and the frontend.
+
+## Workspace notes
+
+- this folder is the project root and currently contains a real `.git` directory
+- a real `.env` may exist locally; do not print or commit its secrets
+- prefer the repo venv for Python commands:
+  - activated shell: `python ...`
+  - direct invocation on Windows PowerShell: `.\.venv\Scripts\python.exe ...`
+- this workspace may contain generated local state such as `.db` files, `storage/`, `frontend/dist/`, and `frontend/node_modules/`
 
 ## Configuration
 
@@ -205,6 +221,8 @@ Backend tests:
 
 ```bash
 python -m pytest backend/tests -q
+# or on Windows PowerShell without activating:
+# .\.venv\Scripts\python.exe -m pytest backend/tests -q
 ```
 
 Frontend production build:
@@ -222,10 +240,16 @@ python scripts/smoke_test.py --base-url http://localhost:8000 --username clinici
 
 ## Documentation index
 
+- [Agent guide](d:/HealthSphere%20AI/agent.md)
+- [Project context](d:/HealthSphere%20AI/context.md)
+- [Project memory](d:/HealthSphere%20AI/memory.md)
+- [Skills map](d:/HealthSphere%20AI/skills.md)
+- [Premium todo](d:/HealthSphere%20AI/todo.md)
 - [Architecture](d:/HealthSphere%20AI/docs/architecture.md)
 - [API documentation](d:/HealthSphere%20AI/docs/api_docs.md)
 - [Deployment guide](d:/HealthSphere%20AI/docs/deployment.md)
 - [Operations guide](d:/HealthSphere%20AI/docs/operations.md)
+- [Presentation audit](d:/HealthSphere%20AI/docs/presentation_audit.md)
 - [Security notes](d:/HealthSphere%20AI/docs/security.md)
 - [ML pipeline](d:/HealthSphere%20AI/docs/ml_pipeline.md)
 - [User manual](d:/HealthSphere%20AI/docs/user_manual.md)

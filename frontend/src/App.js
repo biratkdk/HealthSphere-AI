@@ -36,7 +36,7 @@ class RouteErrorBoundary extends Component {
   }
 }
 
-import LoginPanel from "./components/LoginPanel";
+import PublicLanding from "./components/PublicLanding";
 import { useAuth } from "./context/AuthContext";
 import AuthCallback from "./pages/AuthCallback";
 
@@ -104,10 +104,10 @@ const App = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="shell login-shell">
+      <div className="shell guest-shell">
         <Routes>
           <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route path="*" element={<LoginPanel />} />
+          <Route path="*" element={<PublicLanding theme={theme} setTheme={setTheme} />} />
         </Routes>
       </div>
     );
@@ -150,7 +150,7 @@ const App = () => {
               title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
               aria-label="Toggle theme"
             >
-              {theme === "dark" ? "☀" : "◑"}
+              {theme === "dark" ? "Day" : "Night"}
             </button>
             <button className="secondary-button small-button" type="button" onClick={() => void logout()}>
               Sign out

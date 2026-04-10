@@ -33,14 +33,19 @@ const providerBadge = (provider) => {
   return provider.label?.slice(0, 1)?.toUpperCase() || "+";
 };
 
-const LoginPanel = () => {
+const LoginPanel = ({ defaultMode = "signup", variant = "standalone" }) => {
   const navigate = useNavigate();
   const { login, signup, busy, error, clearError } = useAuth();
-  const [mode, setMode] = useState("signup");
+  const [mode, setMode] = useState(defaultMode);
   const [signInForm, setSignInForm] = useState(signInDefaults);
   const [signUpForm, setSignUpForm] = useState(signUpDefaults);
   const [providers, setProviders] = useState([]);
   const [providersLoading, setProvidersLoading] = useState(true);
+
+  const shellClassName =
+    variant === "embedded"
+      ? "login-panel refined-auth embedded-auth-shell"
+      : "login-panel refined-auth minimal-auth-shell";
 
   useEffect(() => {
     let ignore = false;
@@ -125,11 +130,11 @@ const LoginPanel = () => {
       : "Sign in with your email, username, or a connected provider.";
 
   return (
-    <section className="login-panel refined-auth minimal-auth-shell">
+    <section className={shellClassName}>
       <div className="auth-brand">
         <div className="auth-brand-mark">HS</div>
         <div className="auth-brand-copy">
-          <p className="eyebrow">Secure workspace</p>
+          <p className="eyebrow">{variant === "embedded" ? "Secure access" : "Secure workspace"}</p>
           <h2>{heading}</h2>
           <p className="subtle-copy">{subcopy}</p>
         </div>

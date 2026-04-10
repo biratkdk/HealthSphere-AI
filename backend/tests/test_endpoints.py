@@ -9,10 +9,18 @@ from fastapi.testclient import TestClient
 from pydicom.dataset import FileDataset, FileMetaDataset
 from pydicom.uid import ExplicitVRLittleEndian, SecondaryCaptureImageStorage, generate_uid
 
-os.environ.setdefault("ENVIRONMENT", "test")
-os.environ.setdefault("SERVICE_API_KEY", "test-service-api-key")
-os.environ.setdefault("JWT_SECRET_KEY", "test-jwt-secret-key-32chars-long")
-os.environ.setdefault("SESSION_SECRET_KEY", "test-session-secret-key-32chars")
+os.environ["ENVIRONMENT"] = "test"
+os.environ["DATABASE_URL"] = "sqlite://"
+os.environ["DATABASE_URL_UNPOOLED"] = "sqlite://"
+os.environ["SERVICE_API_KEY"] = "test-service-api-key"
+os.environ["JWT_SECRET_KEY"] = "test-jwt-secret-key-32chars-long"
+os.environ["SESSION_SECRET_KEY"] = "test-session-secret-key-32chars"
+os.environ["BOOTSTRAP_ADMIN_USERNAME"] = "admin"
+os.environ["BOOTSTRAP_ADMIN_PASSWORD"] = "AdminPass123!"
+os.environ["BOOTSTRAP_CLINICIAN_USERNAME"] = "clinician"
+os.environ["BOOTSTRAP_CLINICIAN_PASSWORD"] = "ClinicianPass123!"
+os.environ["BOOTSTRAP_ANALYST_USERNAME"] = "analyst"
+os.environ["BOOTSTRAP_ANALYST_PASSWORD"] = "AnalystPass123!"
 
 from backend.app.core.config import get_settings
 from backend.main import app, bootstrap_application
@@ -176,6 +184,11 @@ def test_patient_summary_contains_predictions() -> None:
     assert "icu_risk" in payload
     assert "disease_risk" in payload
     assert "treatment" in payload
+    assert "mission_control" in payload
+    assert "changed" in payload["mission_control"]
+    assert "why_now" in payload["mission_control"]
+    assert "next_actions" in payload["mission_control"]
+    assert "workflow" in payload["mission_control"]
 
 
 def test_patient_roster_uses_nepali_seed_pack() -> None:
@@ -342,20 +355,37 @@ def test_patient_tasks_handoffs_and_timeline() -> None:
             "title": "Repeat lactate",
             "detail": "Repeat lactate in 2 hours and update the escalation note.",
             "priority": "high",
+            "assignee_username": "clinician",
+            "due_at": "2030-01-01T00:00:00Z",
         },
     )
     assert task_response.status_code == 200
-    task_id = task_response.json()["task_id"]
+    task_payload = task_response.json()
+    task_id = task_payload["task_id"]
+    assert task_payload["ownership_status"] == "assigned"
+    assert task_payload["sla_status"] == "on_track"
+    assert task_payload["due_label"].startswith("Due in")
 
     handoff_response = client.post(
         "/patients/1001/handoffs",
         headers=headers,
         json={
             "summary": "Night shift handoff",
-            "details": "Escalation sent to covering team. Repeat labs are pending.",
+            "details": (
+                "What changed\n"
+                "- Escalation sent to covering team\n"
+                "Pending\n"
+                "- Repeat lactate in 2 hours\n"
+                "Watch\n"
+                "- Escalate if MAP < 65"
+            ),
         },
     )
     assert handoff_response.status_code == 200
+    handoff_payload = handoff_response.json()
+    assert handoff_payload["what_changed"] == ["Escalation sent to covering team"]
+    assert handoff_payload["pending_items"] == ["Repeat lactate in 2 hours"]
+    assert handoff_payload["watch_items"] == ["Escalate if MAP < 65"]
 
     timeline_response = client.get("/patients/1001/timeline", headers=headers)
     assert timeline_response.status_code == 200
@@ -370,6 +400,13 @@ def test_patient_tasks_handoffs_and_timeline() -> None:
     )
     assert task_update_response.status_code == 200
     assert task_update_response.json()["status"] == "completed"
+    assert task_update_response.json()["sla_status"] == "completed"
+
+    summary_response = client.get("/patients/1001/summary", headers=headers)
+    assert summary_response.status_code == 200
+    mission_control = summary_response.json()["mission_control"]
+    assert mission_control["workflow"]["completed_tasks"] >= 1
+    assert mission_control["workflow"]["last_handoff_summary"] == "Night shift handoff"
 
 
 def test_admin_user_directory_and_invite_management() -> None:

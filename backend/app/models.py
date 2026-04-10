@@ -14,6 +14,9 @@ TaskPriority = Literal["low", "medium", "high", "critical"]
 InviteRole = Literal["clinician", "analyst"]
 InviteStatus = Literal["pending", "accepted", "expired", "revoked"]
 TimelineCategory = Literal["lab", "imaging", "alert", "report", "notification", "task", "handoff"]
+TaskSlaStatus = Literal["unscheduled", "on_track", "due_soon", "overdue", "completed"]
+TaskOwnershipStatus = Literal["assigned", "unassigned"]
+MissionControlSource = Literal["alert", "task", "handoff", "lab", "imaging", "report", "risk", "treatment"]
 
 
 class APIModel(BaseModel):
@@ -132,6 +135,13 @@ class PatientTask(APIModel):
     due_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
+    age_minutes: int = Field(default=0, ge=0)
+    due_in_minutes: int | None = None
+    due_label: str | None = None
+    is_overdue: bool = False
+    is_due_soon: bool = False
+    sla_status: TaskSlaStatus = "unscheduled"
+    ownership_status: TaskOwnershipStatus = "unassigned"
 
 
 class PatientTaskCreateRequest(APIModel):
@@ -158,6 +168,10 @@ class HandoffNote(APIModel):
     summary: str
     details: str
     created_at: datetime
+    what_changed: list[str] = Field(default_factory=list)
+    pending_items: list[str] = Field(default_factory=list)
+    watch_items: list[str] = Field(default_factory=list)
+    freshness_minutes: int = Field(default=0, ge=0)
 
 
 class HandoffNoteCreateRequest(APIModel):
@@ -175,6 +189,42 @@ class PatientTimelineEvent(APIModel):
     detail: dict[str, Any] | None = None
 
 
+class MissionControlSignal(APIModel):
+    title: str
+    detail: str
+    tone: Severity
+    source: MissionControlSource
+
+
+class MissionControlAction(APIModel):
+    title: str
+    detail: str
+    priority: Severity
+    owner_hint: str | None = None
+    due_hint: str | None = None
+    linked_task_id: str | None = None
+
+
+class WorkflowSnapshot(APIModel):
+    open_tasks: int = Field(default=0, ge=0)
+    in_progress_tasks: int = Field(default=0, ge=0)
+    blocked_tasks: int = Field(default=0, ge=0)
+    completed_tasks: int = Field(default=0, ge=0)
+    overdue_tasks: int = Field(default=0, ge=0)
+    due_soon_tasks: int = Field(default=0, ge=0)
+    unassigned_tasks: int = Field(default=0, ge=0)
+    last_handoff_at: datetime | None = None
+    last_handoff_summary: str | None = None
+    handoff_age_minutes: int | None = Field(default=None, ge=0)
+
+
+class PatientMissionControl(APIModel):
+    changed: list[MissionControlSignal] = Field(default_factory=list)
+    why_now: list[MissionControlSignal] = Field(default_factory=list)
+    next_actions: list[MissionControlAction] = Field(default_factory=list)
+    workflow: WorkflowSnapshot = Field(default_factory=WorkflowSnapshot)
+
+
 class PatientSummary(APIModel):
     patient: PatientRecord
     icu_risk: IcuRiskResponse
@@ -183,6 +233,7 @@ class PatientSummary(APIModel):
     open_alerts: list[Alert]
     tasks: list[PatientTask] = Field(default_factory=list)
     recent_handoffs: list[HandoffNote] = Field(default_factory=list)
+    mission_control: PatientMissionControl = Field(default_factory=PatientMissionControl)
 
 
 class ReportArtifact(APIModel):

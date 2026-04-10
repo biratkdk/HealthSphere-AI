@@ -1,5 +1,14 @@
 # Operations Guide
 
+## Local workspace notes
+
+- run commands from the project root
+- use the repo venv for Python work:
+  - POSIX shells: `source .venv/bin/activate`
+  - Windows PowerShell: `.\.venv\Scripts\Activate.ps1`
+- keep `.env` local and do not commit it
+- for broader workspace context and contributor rules, also read `agent.md`, `context.md`, `memory.md`, and `skills.md`
+
 ## Service priorities
 
 - keep authenticated operator workflows available
@@ -39,6 +48,8 @@ Backend tests:
 
 ```bash
 python -m pytest backend/tests -q
+# or on Windows PowerShell without activating:
+# .\.venv\Scripts\python.exe -m pytest backend/tests -q
 ```
 
 Frontend build:

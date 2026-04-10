@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import Counter
 from datetime import UTC, datetime, timedelta
+import re
 from secrets import token_urlsafe
 from uuid import uuid4
 
@@ -147,7 +148,94 @@ def _invite_to_schema(invite: InviteCodeORM, raw_code: str | None = None) -> Inv
     )
 
 
+def _elapsed_minutes(timestamp: datetime | None, *, now: datetime | None = None) -> int:
+    if timestamp is None:
+        return 0
+    reference = now or datetime.now(UTC)
+    return max(0, int((reference - timestamp).total_seconds() // 60))
+
+
+def _task_due_label(*, status: str, due_at: datetime | None, due_in_minutes: int | None) -> str:
+    if status == "completed":
+        return "Completed"
+    if due_at is None or due_in_minutes is None:
+        return "No due time"
+    if due_in_minutes < 0:
+        return f"Overdue by {_format_duration(abs(due_in_minutes))}"
+    if due_in_minutes == 0:
+        return "Due now"
+    return f"Due in {_format_duration(due_in_minutes)}"
+
+
+def _format_duration(minutes: int) -> str:
+    if minutes < 60:
+        return f"{minutes}m"
+    hours, remainder = divmod(minutes, 60)
+    if hours < 24:
+        return f"{hours}h {remainder}m" if remainder else f"{hours}h"
+    days, rem_hours = divmod(hours, 24)
+    return f"{days}d {rem_hours}h" if rem_hours else f"{days}d"
+
+
+def _parse_handoff_details(details: str) -> tuple[list[str], list[str], list[str]]:
+    section_map = {
+        "what changed": "what_changed",
+        "what changed since last shift": "what_changed",
+        "pending": "pending_items",
+        "pending items": "pending_items",
+        "watch": "watch_items",
+        "watch items": "watch_items",
+    }
+    structured: dict[str, list[str]] = {
+        "what_changed": [],
+        "pending_items": [],
+        "watch_items": [],
+    }
+    current_section: str | None = None
+    carryover: list[str] = []
+
+    for raw_line in details.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        normalized = re.sub(r"[:\s-]+$", "", line.lower())
+        section_key = section_map.get(normalized)
+        if section_key is not None:
+            current_section = section_key
+            continue
+        entry = re.sub(r"^[\-*•]\s*", "", line).strip()
+        if not entry:
+            continue
+        if current_section is None:
+            carryover.append(entry)
+        else:
+            structured[current_section].append(entry)
+
+    if carryover and not any(structured.values()):
+        structured["what_changed"] = carryover
+    elif carryover:
+        structured["what_changed"] = [*carryover, *structured["what_changed"]]
+
+    return structured["what_changed"], structured["pending_items"], structured["watch_items"]
+
+
 def _task_to_schema(task: CareTaskORM) -> PatientTask:
+    now = datetime.now(UTC)
+    created_at = _ensure_utc(task.created_at) or now
+    updated_at = _ensure_utc(task.updated_at) or now
+    due_at = _ensure_utc(task.due_at)
+    due_in_minutes = int((due_at - now).total_seconds() // 60) if due_at is not None else None
+    if task.status == "completed":
+        sla_status = "completed"
+    elif due_at is None:
+        sla_status = "unscheduled"
+    elif due_in_minutes is not None and due_in_minutes < 0:
+        sla_status = "overdue"
+    elif due_in_minutes is not None and due_in_minutes <= 120:
+        sla_status = "due_soon"
+    else:
+        sla_status = "on_track"
+
     return PatientTask(
         task_id=task.task_id,
         patient_id=task.patient_id,
@@ -157,20 +245,33 @@ def _task_to_schema(task: CareTaskORM) -> PatientTask:
         priority=task.priority,  # type: ignore[arg-type]
         assignee_username=task.assignee_username,
         created_by=task.created_by,
-        due_at=_ensure_utc(task.due_at),
-        created_at=_ensure_utc(task.created_at) or datetime.now(UTC),
-        updated_at=_ensure_utc(task.updated_at) or datetime.now(UTC),
+        due_at=due_at,
+        created_at=created_at,
+        updated_at=updated_at,
+        age_minutes=_elapsed_minutes(created_at, now=now),
+        due_in_minutes=due_in_minutes,
+        due_label=_task_due_label(status=task.status, due_at=due_at, due_in_minutes=due_in_minutes),
+        is_overdue=sla_status == "overdue",
+        is_due_soon=sla_status == "due_soon",
+        sla_status=sla_status,  # type: ignore[arg-type]
+        ownership_status="assigned" if task.assignee_username else "unassigned",
     )
 
 
 def _handoff_to_schema(note: HandoffNoteORM) -> HandoffNote:
+    created_at = _ensure_utc(note.created_at) or datetime.now(UTC)
+    what_changed, pending_items, watch_items = _parse_handoff_details(note.details)
     return HandoffNote(
         note_id=note.note_id,
         patient_id=note.patient_id,
         author_username=note.author_username,
         summary=note.summary,
         details=note.details,
-        created_at=_ensure_utc(note.created_at) or datetime.now(UTC),
+        created_at=created_at,
+        what_changed=what_changed,
+        pending_items=pending_items,
+        watch_items=watch_items,
+        freshness_minutes=_elapsed_minutes(created_at),
     )
 
 

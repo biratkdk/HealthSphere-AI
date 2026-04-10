@@ -48,7 +48,7 @@ Thumbs.db
 .terraform.lock.hcl
 
 # Agent/session scratch files
-memory.md
-agent.md
-context.md
-skills.md
+/.claude/
+/Project_Report.pdf
+
+.vercel
