@@ -42,6 +42,10 @@ def bootstrap_application() -> None:
             # Alembic uses NullPool which creates a separate in-memory connection —
             # tables would disappear. Use init_db() so the shared StaticPool engine is used.
             init_db()
+        elif settings.is_vercel and _db_url.startswith("sqlite"):
+            # Vercel's demo-friendly SQLite runtime is ephemeral; prefer direct schema
+            # creation over Alembic startup on every cold instance.
+            init_db()
         elif settings.should_auto_migrate:
             run_migrations()
         elif settings.is_local_like:
