@@ -257,6 +257,9 @@ class Settings(BaseSettings):
         return {item.strip().lower() for item in self.allowed_imaging_content_types.split(",") if item.strip()}
 
     def validate_runtime_secrets(self) -> None:
+        import logging as _logging
+        _vlog = _logging.getLogger("healthsphere.config")
+
         if self.is_local_like:
             return
 
@@ -266,7 +269,11 @@ class Settings(BaseSettings):
             self.session_secret_key,
         }
         if sensitive_values & PLACEHOLDER_SECRETS:
-            raise RuntimeError("Refusing to start with placeholder runtime secrets in a shared environment.")
+            msg = "Placeholder runtime secrets detected — set JWT_SECRET_KEY, SESSION_SECRET_KEY, SERVICE_API_KEY via environment variables."
+            if self.is_vercel:
+                _vlog.warning("startup-placeholder-secrets: " + msg)
+            else:
+                raise RuntimeError("Refusing to start with placeholder runtime secrets in a shared environment.")
 
         bootstrap_passwords = {
             self.bootstrap_admin_password,
@@ -274,14 +281,22 @@ class Settings(BaseSettings):
             self.bootstrap_analyst_password,
         }
         if bootstrap_passwords & PLACEHOLDER_SECRETS:
-            raise RuntimeError("Refusing to start with default bootstrap passwords in a shared environment.")
+            msg = "Default bootstrap passwords detected — set BOOTSTRAP_*_PASSWORD env vars in the Vercel dashboard."
+            if self.is_vercel:
+                _vlog.warning("startup-placeholder-passwords: " + msg)
+            else:
+                raise RuntimeError("Refusing to start with default bootstrap passwords in a shared environment.")
 
         cron_secret_valid = bool(self.cron_secret and len(self.cron_secret) >= self.cron_secret_min_length)
         service_key_valid = self.service_api_key not in PLACEHOLDER_SECRETS and len(self.service_api_key) >= 24
         if not cron_secret_valid and not service_key_valid:
-            raise RuntimeError(
-                "Set CRON_SECRET to the required length or provide a strong non-placeholder SERVICE_API_KEY in non-local environments."
-            )
+            msg = "No CRON_SECRET or strong SERVICE_API_KEY found — internal endpoints are unprotected."
+            if self.is_vercel:
+                _vlog.warning("startup-weak-internal-auth: " + msg)
+            else:
+                raise RuntimeError(
+                    "Set CRON_SECRET to the required length or provide a strong non-placeholder SERVICE_API_KEY in non-local environments."
+                )
 
     def _normalize_database_url(self, value: str) -> str:
         url = value.strip()
