@@ -1,9 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
 
-  "buildCommand": "cd frontend && npm ci && npm run build",
-  "outputDirectory": "frontend/dist",
-
   "functions": {
     "api/**/*.py": {
       "maxDuration": 60,
@@ -11,28 +8,8 @@
     }
   },
 
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/index" },
-    { "handle": "filesystem" },
-    { "src": "/(.*)",     "dest": "/index.html" }
-  ],
-
-  "headers": [
-    {
-      "source": "/assets/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options",         "value": "DENY" },
-        { "key": "Referrer-Policy",         "value": "strict-origin-when-cross-origin" },
-        { "key": "Permissions-Policy",      "value": "camera=(), microphone=(), geolocation=(), payment=()" }
-      ]
-    }
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/api/index" }
   ],
 
   "env": {
@@ -42,12 +19,7 @@
     "AUTO_MIGRATE":             "true",
     "SEED_DEMO_DATA":           "true",
     "SECURITY_HEADERS_ENABLED": "true",
-    "METRICS_ENABLED":          "false"
-  },
-
-  "build": {
-    "env": {
-      "VITE_API_BASE_URL": ""
-    }
+    "METRICS_ENABLED":          "false",
+    "ALLOWED_ORIGINS":          "https://healthsphere-ai.vercel.app,http://localhost:3000,http://localhost:5173"
   }
 }
