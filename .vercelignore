@@ -1,20 +1,30 @@
-.github
-.venv
-.vercel
-.frontend-buildcheck
-__pycache__
-storage
-.pytest_cache
-healthsphere.db
-airflow
-deployment
-docs
-frontend
-backend/tests
-ml_pipeline/data
-ml_pipeline/notebooks
-ml_pipeline/training
-scripts
+# Python artifacts
+.venv/
+__pycache__/
+.pytest_cache/
+backend/tests/
+
+# Frontend build output (Vercel builds this itself)
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Data & ML artifacts — large, not needed at runtime
+ml_pipeline/data/
+ml_pipeline/notebooks/
+ml_pipeline/training/
+
+# Deployment & infra — not needed at runtime
+.github/
+deployment/
+airflow/
+docs/
+scripts/
+
+# Local dev & DB
+storage/
+*.db
+*.db-journal
 docker-compose.yml
 setup.sh
 Project_Report.pdf

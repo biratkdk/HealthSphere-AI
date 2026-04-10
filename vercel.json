@@ -1,15 +1,55 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/api/index"
-    }
-  ],
+
+  "buildCommand": "cd frontend && npm ci && npm run build",
+  "outputDirectory": "frontend/dist",
+  "installCommand": "pip install -r requirements.txt",
+  "framework": null,
+
   "functions": {
     "api/**/*.py": {
       "maxDuration": 60,
       "excludeFiles": "{.venv/**,frontend/**,docs/**,deployment/**,airflow/**,backend/tests/**,ml_pipeline/data/**,ml_pipeline/notebooks/**,ml_pipeline/training/**,scripts/**,.pytest_cache/**,__pycache__/**}"
+    }
+  },
+
+  "rewrites": [
+    { "source": "/api/v1/(.*)", "destination": "/api/index" },
+    { "source": "/api/(.*)",    "destination": "/api/index" },
+    { "source": "/(.*)",        "destination": "/index.html" }
+  ],
+
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options",  "value": "nosniff" },
+        { "key": "X-Frame-Options",          "value": "DENY" },
+        { "key": "Referrer-Policy",          "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy",       "value": "camera=(), microphone=(), geolocation=(), payment=()" }
+      ]
+    }
+  ],
+
+  "env": {
+    "ENVIRONMENT":              "production",
+    "TASK_EXECUTION_MODE":      "dispatcher",
+    "STORAGE_BACKEND":          "vercel_blob",
+    "AUTO_MIGRATE":             "true",
+    "SEED_DEMO_DATA":           "false",
+    "SECURITY_HEADERS_ENABLED": "true",
+    "METRICS_ENABLED":          "false"
+  },
+
+  "build": {
+    "env": {
+      "VITE_API_BASE_URL": ""
     }
   }
 }
