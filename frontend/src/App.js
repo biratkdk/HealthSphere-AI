@@ -139,8 +139,7 @@ const getWorkspaceMeta = (pathname, unreadCount, user) => {
     return {
       eyebrow: "Patient operations",
       title: "Patient Mission Control",
-      summary:
-        "What changed, why it matters now, and the next accountable actions across alerts, labs, handoffs, imaging, and workflow.",
+      summary: "Changes, drivers, and next actions for one patient.",
       chips: [
         { label: "Mission control live", tone: "low" },
         { label: "Next actions ready", tone: "medium" },
@@ -153,8 +152,7 @@ const getWorkspaceMeta = (pathname, unreadCount, user) => {
     return {
       eyebrow: "Patient command",
       title: "Mission-Control Roster",
-      summary:
-        "Sort the roster by pressure, spot the right patient quickly, and move straight into the clinical control view.",
+      summary: "Find the right patient quickly and open the live command view.",
       chips: [
         { label: "Roster indexed", tone: "low" },
         { label: unreadLabel, tone: unreadCount > 0 ? "medium" : "low" },
@@ -167,8 +165,7 @@ const getWorkspaceMeta = (pathname, unreadCount, user) => {
     return {
       eyebrow: "Population operations",
       title: "Care-Unit Command Board",
-      summary:
-        "Sort the roster by pressure, scan overdue workflow, and see alert plus imaging-review demand across the active population.",
+      summary: "Scan unit pressure, overdue work, alerts, and imaging demand.",
       chips: [
         { label: "Unit pressure live", tone: "medium" },
         { label: unreadLabel, tone: unreadCount > 0 ? "medium" : "low" },
@@ -181,8 +178,7 @@ const getWorkspaceMeta = (pathname, unreadCount, user) => {
     return {
       eyebrow: "Imaging operations",
       title: "Imaging Triage Workbench",
-      summary:
-        "Review studies, manage escalation and sign-off state, and keep report workflow connected to the same patient context.",
+      summary: "Review studies, escalate when needed, and sign off without losing patient context.",
       chips: [
         { label: "Review lane", tone: "medium" },
         { label: "Report linked", tone: "low" },
@@ -195,8 +191,7 @@ const getWorkspaceMeta = (pathname, unreadCount, user) => {
     return {
       eyebrow: "Report orchestration",
       title: "Imaging and Report Queue",
-      summary:
-        "Keep clinical context attached while reports move from intake to draft, review, and accountable delivery.",
+      summary: "Track report status from intake to release.",
       chips: [
         { label: "Queue staged", tone: "medium" },
         { label: "Imaging linked", tone: "low" },
@@ -209,8 +204,7 @@ const getWorkspaceMeta = (pathname, unreadCount, user) => {
     return {
       eyebrow: "Clinical inbox",
       title: "Alerts and Notifications",
-      summary:
-        "Track unread signals, acknowledgements, and escalation pressure without losing the workflow trail.",
+      summary: "Review new signals, acknowledgements, and follow-up.",
       chips: [
         { label: unreadLabel, tone: unreadCount > 0 ? "high" : "low" },
         { label: "Acknowledge fast", tone: "medium" },
@@ -223,8 +217,7 @@ const getWorkspaceMeta = (pathname, unreadCount, user) => {
     return {
       eyebrow: "Operator identity",
       title: "Profile and Preferences",
-      summary:
-        "Control identity, view access posture, and keep this workspace aligned to your organization and role.",
+      summary: "Manage your account, sessions, and workspace defaults.",
       chips: [
         { label: user?.role || "role-scoped", tone: "low" },
         { label: user?.auth_provider || "password auth", tone: "medium" },
@@ -237,8 +230,7 @@ const getWorkspaceMeta = (pathname, unreadCount, user) => {
     return {
       eyebrow: "Governance and control",
       title: "Admin Console",
-      summary:
-        "Manage invites, audit visibility, and organization-level control without leaving the operating system.",
+      summary: "Manage users, invites, and audit history.",
       chips: [
         { label: "Audit live", tone: "medium" },
         { label: "Role aware", tone: "low" },
@@ -250,8 +242,7 @@ const getWorkspaceMeta = (pathname, unreadCount, user) => {
   return {
     eyebrow: "Operations command",
     title: "Clinical Operating System",
-    summary:
-      "A live workspace for care-unit pressure, patient risk, report load, and accountable workflow in one command surface.",
+    summary: "Live view of patient pressure, report load, and workflow state.",
     chips: [
       { label: "Operations live", tone: "low" },
       { label: unreadLabel, tone: unreadCount > 0 ? "medium" : "low" },
@@ -330,7 +321,7 @@ const App = () => {
           <div className="sidebar-brand-copy">
             <p className="sidebar-kicker">Clinical operating system</p>
             <h1>HealthSphere AI</h1>
-            <p>Mission control, imaging review, report release, and accountable workflow in one enterprise workspace.</p>
+            <p>Patient control, imaging review, reports, and audit in one workspace.</p>
           </div>
         </section>
 

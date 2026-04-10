@@ -10,17 +10,17 @@ const platformPillars = [
   {
     label: "Mission control",
     title: "See what changed first",
-    detail: "The signed-in product is built around delta visibility, accountable follow-through, and the next clinical action.",
+    detail: "Lead with change, risk, and the next action instead of forcing teams to scan multiple tools.",
   },
   {
     label: "Workflow engine",
     title: "Keep ownership visible",
-    detail: "Tasks, handoffs, due state, and unresolved pressure remain attached to the patient and the care unit.",
+    detail: "Tasks, handoffs, owners, and due state stay attached to the patient and the care unit.",
   },
   {
     label: "Imaging and reports",
     title: "Move from review to release",
-    detail: "Imaging context and report delivery stay inside the same operating system instead of splitting across tools.",
+    detail: "Imaging review and report release move in one lane with the patient context intact.",
   },
 ];
 
@@ -29,43 +29,43 @@ const platformIndex = [
     code: "01",
     status: "Live",
     title: "Patient Mission Control",
-    detail: "What changed, why it matters now, and the next accountable actions on one patient surface.",
-    points: ["Mission control summary", "Open alerts and acknowledgements", "Timeline, labs, tasks, and imaging in one view"],
+    detail: "One patient surface for changes, drivers, and the next action.",
+    points: ["Change summary", "Open alerts and acknowledgements", "Timeline, labs, tasks, and imaging"],
   },
   {
     code: "02",
     status: "Live",
     title: "Ownership and SLA Engine",
-    detail: "Workflow stays explicit with assignees, due states, overdue pressure, and structured handoffs.",
-    points: ["Ownership status and due labels", "Structured what-changed and pending items", "Task and handoff pressure in context"],
+    detail: "Ownership stays explicit with due state, overdue pressure, and structured handoffs.",
+    points: ["Owners and due labels", "Structured handoffs", "Task pressure in context"],
   },
   {
     code: "03",
     status: "Live",
     title: "Imaging Review Lane",
-    detail: "Clinical review stays attached to the patient record instead of becoming a disconnected upload flow.",
-    points: ["DICOM-aware upload guard", "Imaging context tied to the patient", "Synthetic demo imaging already linked in product proof"],
+    detail: "Review work stays connected to the patient record instead of becoming a detached upload flow.",
+    points: ["DICOM-aware upload guard", "Patient-linked imaging context", "Review status and escalation"],
   },
   {
     code: "04",
     status: "Live",
     title: "Report Orchestration",
-    detail: "Reports move through queue, progress, and delivery states with clearer operational visibility.",
-    points: ["Queue and workflow stages", "Progress tracking", "Release context tied to imaging and patient state"],
+    detail: "Reports move through queue, progress, and delivery state with clear operational visibility.",
+    points: ["Queue and workflow stages", "Progress tracking", "Release context linked to patient state"],
   },
   {
     code: "05",
     status: "Live",
     title: "Governance and Admin",
-    detail: "Sessions, roles, invites, notifications, and audit visibility are product primitives, not afterthoughts.",
-    points: ["Role-aware sessions", "Admin and invite controls", "Audit-ready operating model"],
+    detail: "Sessions, roles, invites, notifications, and audit logs are built into the product model.",
+    points: ["Role-aware sessions", "Admin controls", "Audit-ready activity history"],
   },
   {
     code: "06",
     status: "Next",
     title: "Population Command Boards",
-    detail: "The next layer brings ICU risk boards, overdue workflow boards, and unit-level control into the same shell.",
-    points: ["Care-unit pressure views", "Overdue task and unresolved-alert boards", "Outcome and throughput analytics"],
+    detail: "Population views bring unit pressure, overdue work, and outcome tracking into the same shell.",
+    points: ["Care-unit pressure views", "Overdue task and alert boards", "Outcome and throughput analytics"],
   },
 ];
 
@@ -188,18 +188,18 @@ const demoReportJobs = [
 const accessNotes = [
   {
     title: "Live stack",
-    detail: "Frontend, FastAPI APIs, PostgreSQL persistence, reports, notifications, and admin lanes are already connected.",
+    detail: "Frontend, APIs, PostgreSQL, reports, notifications, and admin lanes are already connected.",
   },
   {
     title: "Enterprise posture",
-    detail: "Role-aware sessions, provider-ready auth, and audit logging give the product a credible operating model.",
+    detail: "Role-aware sessions, provider-ready auth, and audit logging support a serious operating model.",
   },
 ];
 
 const imagingFindings = [
-  "Synthetic imaging from the project demo dataset is linked directly to the review lane.",
+  "Synthetic imaging is linked directly to the review lane.",
   "Finding context stays attached to the patient, report state, and follow-up timing.",
-  "Operators can move from image review to delivery without switching products.",
+  "Operators can move from review to delivery without switching products.",
 ];
 
 const queueTone = {
@@ -253,14 +253,14 @@ const PublicLanding = ({ theme, setTheme }) => {
           <div className="public-hero-copy">
             <div className="public-kicker-row">
               <span className="public-kicker-pill">Working product stack</span>
-              <span className="public-mono-label">Cleaner front door. Same serious system.</span>
+              <span className="public-mono-label">Live application, not a concept mockup</span>
             </div>
 
-            <h2>The clinical operating system for patient pressure, imaging review, and report release.</h2>
+            <h2>Clinical command for patient pressure, imaging review, and report release.</h2>
 
             <p className="public-lead">
-              HealthSphere AI turns the active care queue into one managed workspace: live pressure, imaging context,
-              staged reports, and accountable handoffs.
+              HealthSphere AI brings patient pressure, imaging review, report progress, and accountable handoffs into one
+              operating surface.
             </p>
 
             <div className="public-hero-actions">
@@ -348,11 +348,10 @@ const PublicLanding = ({ theme, setTheme }) => {
         <section className="public-section public-index-section" id="index">
           <div className="public-section-heading public-section-heading-wide">
             <p className="public-mono-label">Platform index</p>
-            <h2>The product lanes are richer than the reference app, but aligned to HealthSphere AI&apos;s real core.</h2>
+            <h2>Built for clinical operations, not generic health content.</h2>
             <p>
-              This is not a wellness dashboard or a generic education site. The feature system is organized around
-              clinical operations: patient control, ownership, imaging, reports, governance, and the next population
-              command layer.
+              The product is organized around patient control, workflow ownership, imaging, reports, governance, and
+              population operations.
             </p>
           </div>
 
@@ -380,10 +379,9 @@ const PublicLanding = ({ theme, setTheme }) => {
         <section className="public-section" id="evidence">
           <div className="public-section-heading">
             <p className="public-mono-label">Product proof</p>
-            <h2>Real product surfaces, not concept-only marketing.</h2>
+            <h2>Working UI, not concept-only marketing.</h2>
             <p>
-              The landing now shows the actual dashboard language of the signed-in product, paired with a synthetic
-              demo patient and project imaging asset.
+              The landing uses real product surfaces with a synthetic demo patient and imaging asset from the project.
             </p>
           </div>
 
@@ -443,10 +441,9 @@ const PublicLanding = ({ theme, setTheme }) => {
           <div className="public-access-layout">
             <div className="public-access-copy">
               <p className="public-mono-label">Secure operator access</p>
-              <h2>Enter the live workspace through a calmer front door.</h2>
+              <h2>Use the live workspace.</h2>
               <p>
-                The presentation is more disciplined now, but the substance is the same: authenticated sessions,
-                backend APIs, PostgreSQL records, report workflow, imaging review, notifications, and admin control.
+                Sign in to patient operations, imaging review, reports, notifications, and admin control.
               </p>
 
               <div className="public-access-note-grid">

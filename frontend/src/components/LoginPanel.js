@@ -126,8 +126,8 @@ const LoginPanel = ({ defaultMode = "signup", variant = "standalone" }) => {
   const heading = mode === "signup" ? "Create your account" : "Welcome back";
   const subcopy =
     mode === "signup"
-      ? "Start with your name, email, and password. Your workspace handle is created automatically."
-      : "Sign in with your email, username, or a connected provider.";
+      ? "Set up your operator account. Role and profile details can be finished later."
+      : "Sign in with your username, email, or connected provider.";
 
   return (
     <section className={shellClassName}>
@@ -233,7 +233,7 @@ const LoginPanel = ({ defaultMode = "signup", variant = "standalone" }) => {
             </label>
 
             <p className="auth-helper-note">
-              Extra profile details can be added later. We create your username automatically from your email.
+              We create your username from your email. Profile details can be completed later.
             </p>
 
             <button className="primary-button accent-button auth-submit-button" type="submit" disabled={busy}>
@@ -279,7 +279,7 @@ const LoginPanel = ({ defaultMode = "signup", variant = "standalone" }) => {
       </div>
 
       <p className="auth-footer-note subtle-copy">
-        Provider buttons activate automatically once their credentials are connected in the backend deployment.
+        Provider buttons activate automatically when identity providers are configured in the backend deployment.
       </p>
     </section>
   );

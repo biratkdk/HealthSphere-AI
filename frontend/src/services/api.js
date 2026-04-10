@@ -3,6 +3,7 @@ import axios from "axios";
 const API_PREFIX = "/api/v1";
 
 const sanitizeBaseURL = (value) => (typeof value === "string" ? value.trim() : "");
+const isLocalHostname = (value) => value === "localhost" || value === "127.0.0.1";
 
 const legacyBaseURL =
   typeof process !== "undefined" && process.env ? sanitizeBaseURL(process.env.REACT_APP_API_BASE_URL) : "";
@@ -26,18 +27,24 @@ const resolveHostedBaseURL = () => {
   }
 
   const { hostname, origin } = window.location;
-  if (hostname === "localhost" || hostname === "127.0.0.1") {
+  if (isLocalHostname(hostname)) {
     return "http://localhost:8000";
   }
 
   return origin;
 };
 
-const resolvedBaseURL =
-  sanitizeBaseURL(import.meta.env.VITE_API_BASE_URL) ||
-  legacyBaseURL ||
-  resolveHostedBaseURL() ||
-  "http://localhost:8000";
+const resolveConfiguredBaseURL = () => sanitizeBaseURL(import.meta.env.VITE_API_BASE_URL) || legacyBaseURL;
+
+const resolvedBaseURL = (() => {
+  const hostedBaseURL = resolveHostedBaseURL();
+  if (typeof window !== "undefined" && !isLocalHostname(window.location.hostname)) {
+    // In hosted deployments prefer the same-origin /api proxy so auth cookies
+    // stay first-party and survive hard refreshes consistently.
+    return hostedBaseURL || resolveConfiguredBaseURL() || "http://localhost:8000";
+  }
+  return resolveConfiguredBaseURL() || hostedBaseURL || "http://localhost:8000";
+})();
 
 const serviceBaseURL = resolvedBaseURL.replace(/\/$/, "");
 const baseURL = `${serviceBaseURL}${API_PREFIX}`;

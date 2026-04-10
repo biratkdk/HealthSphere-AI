@@ -107,10 +107,7 @@ const Population = () => {
         <div>
           <p className="eyebrow">Population operations</p>
           <h2>Care-unit command board</h2>
-          <p className="subtle-copy">
-            Watch ICU pressure, overdue work, unresolved alerts, and imaging review demand without leaving the core
-            product shell.
-          </p>
+          <p className="subtle-copy">Track unit pressure, overdue work, alerts, and imaging review from one board.</p>
           <div className="hero-badges">
             <span className="tone tone-low">{board.care_units.length} care units</span>
             <span className={toneClassName(board.totals.overdue_tasks > 0 ? "critical" : "low")}>
