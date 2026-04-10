@@ -69,7 +69,7 @@ const navigationGroups = [
         label: "Operations",
         shortLabel: "Ops",
         navCode: "01",
-        description: "Care-unit pressure, alerts, and live queue load.",
+        description: "Care-unit load, active alerts, and queue pressure.",
         end: true,
       },
       {
@@ -77,7 +77,7 @@ const navigationGroups = [
         label: "Population",
         shortLabel: "Population",
         navCode: "02",
-        description: "Care-unit pressure, hot patients, and overdue workflow lanes.",
+        description: "Hot patients, overdue work, and unit pressure.",
       },
       {
         to: "/patients",
@@ -96,35 +96,35 @@ const navigationGroups = [
         label: "Imaging",
         shortLabel: "Imaging",
         navCode: "04",
-        description: "Study review, escalation, and sign-off inside one workbench.",
+        description: "Study review, escalation, and sign-off.",
       },
       {
         to: "/reports",
         label: "Reports",
         shortLabel: "Reports",
         navCode: "05",
-        description: "Imaging-linked report flow from intake to release.",
+        description: "Report queue from intake to release.",
       },
       {
         to: "/notifications",
         label: "Inbox",
         shortLabel: "Inbox",
         navCode: "06",
-        description: "Unread notifications, escalations, and follow-through.",
+        description: "Unread events, escalations, and follow-through.",
       },
       {
         to: "/profile",
         label: "Profile",
         shortLabel: "Profile",
         navCode: "07",
-        description: "Identity, preferences, and operator posture.",
+        description: "Identity, sessions, and workspace defaults.",
       },
       {
         to: "/admin",
         label: "Admin",
         shortLabel: "Admin",
         navCode: "08",
-        description: "Organization controls, invites, and audit lanes.",
+        description: "Users, invites, and audit history.",
         adminOnly: true,
       },
     ],
@@ -139,10 +139,10 @@ const getWorkspaceMeta = (pathname, unreadCount, user) => {
     return {
       eyebrow: "Patient operations",
       title: "Patient Mission Control",
-      summary: "Changes, drivers, and next actions for one patient.",
+      summary: "One patient. Current changes, drivers, and next steps.",
       chips: [
-        { label: "Mission control live", tone: "low" },
-        { label: "Next actions ready", tone: "medium" },
+        { label: "Live", tone: "low" },
+        { label: "Next actions", tone: "medium" },
         { label: unreadLabel, tone: unreadCount > 0 ? "high" : "low" },
       ],
     };
@@ -152,9 +152,9 @@ const getWorkspaceMeta = (pathname, unreadCount, user) => {
     return {
       eyebrow: "Patient command",
       title: "Mission-Control Roster",
-      summary: "Find the right patient quickly and open the live command view.",
+      summary: "Find the right patient fast and open the live workspace.",
       chips: [
-        { label: "Roster indexed", tone: "low" },
+        { label: "Roster ready", tone: "low" },
         { label: unreadLabel, tone: unreadCount > 0 ? "medium" : "low" },
         { label: orgLabel, tone: "low" },
       ],
@@ -165,9 +165,9 @@ const getWorkspaceMeta = (pathname, unreadCount, user) => {
     return {
       eyebrow: "Population operations",
       title: "Care-Unit Command Board",
-      summary: "Scan unit pressure, overdue work, alerts, and imaging demand.",
+      summary: "Track unit pressure, overdue work, alerts, and imaging demand.",
       chips: [
-        { label: "Unit pressure live", tone: "medium" },
+        { label: "Unit pressure", tone: "medium" },
         { label: unreadLabel, tone: unreadCount > 0 ? "medium" : "low" },
         { label: orgLabel, tone: "low" },
       ],
@@ -178,10 +178,10 @@ const getWorkspaceMeta = (pathname, unreadCount, user) => {
     return {
       eyebrow: "Imaging operations",
       title: "Imaging Triage Workbench",
-      summary: "Review studies, escalate when needed, and sign off without losing patient context.",
+      summary: "Review studies, escalate when needed, and sign off in one lane.",
       chips: [
         { label: "Review lane", tone: "medium" },
-        { label: "Report linked", tone: "low" },
+        { label: "Reports linked", tone: "low" },
         { label: orgLabel, tone: "low" },
       ],
     };
@@ -191,9 +191,9 @@ const getWorkspaceMeta = (pathname, unreadCount, user) => {
     return {
       eyebrow: "Report orchestration",
       title: "Imaging and Report Queue",
-      summary: "Track report status from intake to release.",
+      summary: "Queue, track, and release report packages.",
       chips: [
-        { label: "Queue staged", tone: "medium" },
+        { label: "Queue active", tone: "medium" },
         { label: "Imaging linked", tone: "low" },
         { label: orgLabel, tone: "low" },
       ],
@@ -204,10 +204,10 @@ const getWorkspaceMeta = (pathname, unreadCount, user) => {
     return {
       eyebrow: "Clinical inbox",
       title: "Alerts and Notifications",
-      summary: "Review new signals, acknowledgements, and follow-up.",
+      summary: "Unread alerts, completions, and follow-up.",
       chips: [
         { label: unreadLabel, tone: unreadCount > 0 ? "high" : "low" },
-        { label: "Acknowledge fast", tone: "medium" },
+        { label: "Actionable", tone: "medium" },
         { label: orgLabel, tone: "low" },
       ],
     };
@@ -217,7 +217,7 @@ const getWorkspaceMeta = (pathname, unreadCount, user) => {
     return {
       eyebrow: "Operator identity",
       title: "Profile and Preferences",
-      summary: "Manage your account, sessions, and workspace defaults.",
+      summary: "Manage identity, sessions, and workspace defaults.",
       chips: [
         { label: user?.role || "role-scoped", tone: "low" },
         { label: user?.auth_provider || "password auth", tone: "medium" },
@@ -230,10 +230,10 @@ const getWorkspaceMeta = (pathname, unreadCount, user) => {
     return {
       eyebrow: "Governance and control",
       title: "Admin Console",
-      summary: "Manage users, invites, and audit history.",
+      summary: "Access control, invites, and audit activity.",
       chips: [
         { label: "Audit live", tone: "medium" },
-        { label: "Role aware", tone: "low" },
+        { label: "Access control", tone: "low" },
         { label: orgLabel, tone: "low" },
       ],
     };
@@ -242,7 +242,7 @@ const getWorkspaceMeta = (pathname, unreadCount, user) => {
   return {
     eyebrow: "Operations command",
     title: "Clinical Operating System",
-    summary: "Live view of patient pressure, report load, and workflow state.",
+    summary: "Patient, workflow, imaging, and reporting state in one view.",
     chips: [
       { label: "Operations live", tone: "low" },
       { label: unreadLabel, tone: unreadCount > 0 ? "medium" : "low" },
@@ -321,7 +321,7 @@ const App = () => {
           <div className="sidebar-brand-copy">
             <p className="sidebar-kicker">Clinical operating system</p>
             <h1>HealthSphere AI</h1>
-            <p>Patient control, imaging review, reports, and audit in one workspace.</p>
+            <p>Patient control, imaging, reporting, and audit in one workspace.</p>
           </div>
         </section>
 
@@ -354,15 +354,15 @@ const App = () => {
 
         <section className="sidebar-status-card">
           <p className="sidebar-group-label">Platform posture</p>
-          <strong>One operating model</strong>
+          <strong>Shared clinical control</strong>
           <p>
-            Patient risk, task ownership, handoffs, imaging review, reports, and audit visibility stay inside the same
-            control plane.
+            Patient signals, task ownership, handoffs, imaging review, reports, and audit events stay inside one
+            operating layer.
           </p>
           <div className="sidebar-status-pills">
-            <span className="tone tone-low">Mission control</span>
-            <span className="tone tone-medium">Workflow engine</span>
-            <span className="tone tone-low">Governance ready</span>
+            <span className="tone tone-low">Patients</span>
+            <span className="tone tone-medium">Workflow</span>
+            <span className="tone tone-low">Governance</span>
           </div>
         </section>
       </aside>

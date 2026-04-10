@@ -655,11 +655,31 @@ a:focus-visible {
   gap: 12px;
 }
 
+.panel-header-stack {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.panel-header-stack h3,
+.panel-header-stack h4 {
+  margin: 0;
+}
+
+.panel-header-stack p {
+  margin: 0;
+  color: var(--muted);
+}
+
 .metrics-grid {
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 14px;
+}
+
+.workspace-kpi-grid {
+  grid-column: 1 / -1;
 }
 
 .metric-card,
@@ -986,6 +1006,36 @@ a:focus-visible {
   text-align: right;
 }
 
+.notification-item {
+  display: grid;
+  gap: 12px;
+}
+
+.notification-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  align-items: center;
+}
+
+.notification-category-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(19, 38, 47, 0.04);
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: capitalize;
+}
+
+.notification-body {
+  margin: 0;
+  line-height: 1.65;
+}
+
 .upload-form {
   display: flex;
   gap: 14px;
@@ -1234,11 +1284,54 @@ a:focus-visible {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
+.directory-grid-spaced {
+  margin-top: 18px;
+}
+
+.directory-toolbar,
+.notification-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.directory-filter-row,
+.directory-sort-row {
+  margin-top: 0;
+}
+
+.directory-card-copy {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
 .directory-actions {
   display: grid;
   gap: 10px;
   justify-items: end;
   min-width: 220px;
+}
+
+.directory-card-id {
+  flex-shrink: 0;
+  font-size: 0.82rem;
+}
+
+.compact-tone {
+  padding: 4px 8px;
+  font-size: 0.76rem;
+}
+
+.compact-copy {
+  font-size: 0.78rem;
+}
+
+.directory-empty-state {
+  grid-column: 1 / -1;
 }
 
 .compact-field {
@@ -1846,6 +1939,10 @@ a:focus-visible {
   gap: 8px;
 }
 
+.compact-list {
+  gap: 12px;
+}
+
 .audit-panel {
   grid-column: 1 / -1;
 }
@@ -1855,6 +1952,10 @@ a:focus-visible {
   border-radius: 18px;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.78);
+}
+
+.audit-row p {
+  margin: 8px 0 0;
 }
 
 .detail-block {
@@ -1886,6 +1987,44 @@ a:focus-visible {
 
 .error-text {
   color: var(--critical);
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.toolbar-note {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.feedback-banner {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: rgba(11, 111, 112, 0.08);
+}
+
+.feedback-banner p {
+  margin: 0;
+}
+
+.feedback-banner.is-error {
+  border-color: rgba(162, 63, 63, 0.18);
+  background: rgba(162, 63, 63, 0.08);
+}
+
+.feedback-banner.is-success {
+  border-color: rgba(31, 122, 85, 0.18);
+  background: rgba(31, 122, 85, 0.08);
 }
 
 /* ── Loading states ── */
@@ -2194,7 +2333,9 @@ a:focus-visible {
   .mission-control-head,
   .workflow-task-top,
   .population-card-header,
-  .workbench-detail-top {
+  .workbench-detail-top,
+  .notification-toolbar,
+  .feedback-banner {
     flex-direction: column;
     align-items: flex-start;
   }
@@ -2206,6 +2347,12 @@ a:focus-visible {
   .queue-meta {
     align-items: flex-start;
     text-align: left;
+  }
+
+  .notification-status-row,
+  .toolbar-actions {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .directory-actions {
@@ -2332,6 +2479,25 @@ a:focus-visible {
 [data-theme="dark"] .population-meta-label {
   background: rgba(96, 233, 211, 0.12);
   color: #84f0df;
+}
+
+[data-theme="dark"] .notification-category-tag {
+  border-color: rgba(125, 183, 214, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #c8dde5;
+}
+
+[data-theme="dark"] .feedback-banner {
+  border-color: rgba(125, 183, 214, 0.12);
+  background: rgba(74, 219, 210, 0.08);
+}
+
+[data-theme="dark"] .feedback-banner.is-error {
+  background: rgba(162, 63, 63, 0.16);
+}
+
+[data-theme="dark"] .feedback-banner.is-success {
+  background: rgba(31, 122, 85, 0.16);
 }
 
 [data-theme="dark"] .nav-links a:hover,

@@ -6,18 +6,15 @@ import { getRequestErrorMessage } from "../services/api";
 
 const RISK_COLORS = {
   critical: "risk-critical",
-  high:     "risk-high",
-  medium:   "risk-medium",
-  low:      "risk-low",
+  high: "risk-high",
+  medium: "risk-medium",
+  low: "risk-low",
 };
 
-const careUnitsFrom = (patients) => {
-  const units = [...new Set(patients.map((p) => p.care_unit))].filter(Boolean).sort();
-  return units;
-};
+const careUnitsFrom = (patients) => [...new Set(patients.map((patient) => patient.care_unit))].filter(Boolean).sort();
 
 const Patients = () => {
-  const [query, setQuery]   = useState("");
+  const [query, setQuery] = useState("");
   const [unitFilter, setUnitFilter] = useState("all");
   const [sortBy, setSortBy] = useState("name");
 
@@ -28,35 +25,54 @@ const Patients = () => {
 
   const filtered = useMemo(() => {
     let list = allPatients;
-    const q = query.trim().toLowerCase();
-    if (q) {
+    const normalizedQuery = query.trim().toLowerCase();
+
+    if (normalizedQuery) {
       list = list.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.mrn?.toLowerCase().includes(q) ||
-          p.diagnosis?.toLowerCase().includes(q) ||
-          p.care_unit?.toLowerCase().includes(q)
+        (patient) =>
+          patient.name.toLowerCase().includes(normalizedQuery) ||
+          patient.mrn?.toLowerCase().includes(normalizedQuery) ||
+          patient.diagnosis?.toLowerCase().includes(normalizedQuery) ||
+          patient.care_unit?.toLowerCase().includes(normalizedQuery)
       );
     }
+
     if (unitFilter !== "all") {
-      list = list.filter((p) => p.care_unit === unitFilter);
+      list = list.filter((patient) => patient.care_unit === unitFilter);
     }
+
     if (sortBy === "name") {
-      list = [...list].sort((a, b) => a.name.localeCompare(b.name));
+      list = [...list].sort((left, right) => left.name.localeCompare(right.name));
     } else if (sortBy === "id") {
-      list = [...list].sort((a, b) => a.patient_id - b.patient_id);
+      list = [...list].sort((left, right) => left.patient_id - right.patient_id);
     } else if (sortBy === "unit") {
-      list = [...list].sort((a, b) => (a.care_unit || "").localeCompare(b.care_unit || ""));
+      list = [...list].sort((left, right) => (left.care_unit || "").localeCompare(right.care_unit || ""));
     }
+
     return list;
   }, [allPatients, query, unitFilter, sortBy]);
+
+  const patientMetrics = useMemo(() => {
+    const elevatedRisk = allPatients.filter((patient) => ["critical", "high"].includes(patient.risk_band)).length;
+    const criticalWatch = allPatients.filter((patient) => patient.risk_band === "critical").length;
+    const flaggedPatients = allPatients.filter((patient) => (patient.risk_flags?.length || 0) > 0).length;
+
+    return [
+      { label: "Patients", value: allPatients.length, tone: "low" },
+      { label: "Care units", value: careUnits.length, tone: "low" },
+      { label: "Elevated risk", value: elevatedRisk, tone: elevatedRisk > 0 ? "high" : "low" },
+      { label: "Critical watch", value: criticalWatch, tone: criticalWatch > 0 ? "critical" : "low" },
+      { label: "Flagged", value: flaggedPatients, tone: flaggedPatients > 0 ? "medium" : "low" },
+      { label: "Visible roster", value: filtered.length, tone: "low" },
+    ];
+  }, [allPatients, careUnits.length, filtered.length]);
 
   if (isLoading) {
     return (
       <div className="page-grid">
         <section className="panel full-span loading-panel">
           <div className="spinner" />
-          <p>Loading patient directory&hellip;</p>
+          <p>Loading patient directory...</p>
         </section>
       </div>
     );
@@ -78,40 +94,50 @@ const Patients = () => {
       <section className="hero-panel">
         <div>
           <p className="eyebrow">Patient directory</p>
-          <h2>Clinical roster</h2>
-          <p className="subtle-copy">
-            {allPatients.length} patients monitored across {careUnits.length} care units.
-          </p>
+          <h2>Mission-control roster</h2>
+          <p className="subtle-copy">Find the right patient quickly and move into the live workspace.</p>
         </div>
         <label className="field hero-search-field">
           <span>Search patients</span>
           <input
             type="search"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Name, MRN, diagnosis, care unit…"
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search name, MRN, diagnosis, or care unit"
           />
         </label>
       </section>
 
+      <section className="metrics-grid workspace-kpi-grid">
+        {patientMetrics.map((metric) => (
+          <article key={metric.label} className={`metric-card metric-card-${metric.tone}`}>
+            <span>{metric.label}</span>
+            <strong>{metric.value}</strong>
+          </article>
+        ))}
+      </section>
+
       <section className="panel full-span">
         <div className="panel-header">
-          <h3>Roster</h3>
+          <div className="panel-header-stack">
+            <h3>Roster</h3>
+            <p>Filtered by unit, diagnosis, and current search terms.</p>
+          </div>
           <span className="subtle-copy">{filtered.length} results</span>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 12 }}>
-          <div className="filter-row" style={{ marginTop: 0 }}>
+        <div className="directory-toolbar">
+          <div className="filter-row directory-filter-row">
             <button
               className={`filter-chip ${unitFilter === "all" ? "active" : ""}`}
               type="button"
               onClick={() => setUnitFilter("all")}
             >
-              All
+              All units
               <span className="filter-chip-count">{allPatients.length}</span>
             </button>
             {careUnits.map((unit) => {
-              const count = allPatients.filter((p) => p.care_unit === unit).length;
+              const count = allPatients.filter((patient) => patient.care_unit === unit).length;
               return (
                 <button
                   key={unit}
@@ -125,9 +151,10 @@ const Patients = () => {
               );
             })}
           </div>
-          <div className="sort-row" style={{ marginTop: 0 }}>
+
+          <div className="sort-row directory-sort-row">
             <span>Sort by</span>
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+            <select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
               <option value="name">Name</option>
               <option value="id">Patient ID</option>
               <option value="unit">Care unit</option>
@@ -135,44 +162,44 @@ const Patients = () => {
           </div>
         </div>
 
-        <div className="directory-grid" style={{ marginTop: 18 }}>
-          {filtered.map((p) => (
-            <Link key={p.patient_id} className="roster-card directory-card" to={`/patients/${p.patient_id}`}>
-              <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="directory-grid directory-grid-spaced">
+          {filtered.map((patient) => (
+            <Link key={patient.patient_id} className="roster-card directory-card" to={`/patients/${patient.patient_id}`}>
+              <div className="directory-card-copy">
                 <div className="patient-card-header">
-                  <strong>{p.name}</strong>
-                  <span className={`risk-badge ${RISK_COLORS[p.risk_band] || "risk-low"}`}>
-                    {p.risk_band || "low"}
+                  <strong>{patient.name}</strong>
+                  <span className={`risk-badge ${RISK_COLORS[patient.risk_band] || "risk-low"}`}>
+                    {patient.risk_band || "low"}
                   </span>
                 </div>
-                <p className="subtle-copy">{p.care_unit} &middot; {p.diagnosis}</p>
+                <p className="subtle-copy">{patient.care_unit} &middot; {patient.diagnosis}</p>
                 <div className="patient-meta-row">
-                  <span className="tone tone-low" style={{ fontSize: "0.76rem", padding: "3px 8px" }}>
-                    MRN {p.mrn}
-                  </span>
-                  <span className="subtle-copy" style={{ fontSize: "0.78rem" }}>
-                    Age {p.age} &middot; {p.sex}
+                  <span className="tone tone-low compact-tone">MRN {patient.mrn}</span>
+                  <span className="subtle-copy compact-copy">
+                    Age {patient.age} &middot; {patient.sex}
                   </span>
                 </div>
               </div>
-              <span className="subtle-copy" style={{ fontSize: "0.82rem", flexShrink: 0 }}>
-                #{p.patient_id}
-              </span>
+              <span className="subtle-copy directory-card-id">#{patient.patient_id}</span>
             </Link>
           ))}
-          {filtered.length === 0 && (
-            <div className="empty-state" style={{ gridColumn: "1 / -1" }}>
-              <span className="empty-state-icon">🔍</span>
-              <span>No patients matched the current filters.</span>
+
+          {filtered.length === 0 ? (
+            <div className="empty-state directory-empty-state">
+              <strong>No patients matched the current filters.</strong>
+              <span>Clear the current search and unit filters to restore the full roster.</span>
               <button
                 className="secondary-button small-button"
                 type="button"
-                onClick={() => { setQuery(""); setUnitFilter("all"); }}
+                onClick={() => {
+                  setQuery("");
+                  setUnitFilter("all");
+                }}
               >
                 Clear filters
               </button>
             </div>
-          )}
+          ) : null}
         </div>
       </section>
     </div>

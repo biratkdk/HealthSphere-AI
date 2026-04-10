@@ -13,6 +13,7 @@ const Reports = () => {
   const [activeJobId, setActiveJobId] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
   const {
     snapshot,
     connected: liveFeedConnected,
@@ -25,6 +26,7 @@ const Reports = () => {
     error: patientsError,
     isLoading: patientsLoading,
   } = useSWR(user ? ["patients"] : null);
+
   const {
     data: queue = [],
     error: queueError,
@@ -52,18 +54,19 @@ const Reports = () => {
   });
 
   useEffect(() => {
-    if (!snapshot) {
+    if (!snapshot?.active_jobs) {
       return;
     }
 
-    if (snapshot.active_jobs) {
-      mutateQueue(snapshot.active_jobs, false);
-      if (activeJobId) {
-        const matchingJob = snapshot.active_jobs.find((item) => item.job_id === activeJobId);
-        if (matchingJob) {
-          mutateJob(matchingJob, false);
-        }
-      }
+    mutateQueue(snapshot.active_jobs, false);
+
+    if (!activeJobId) {
+      return;
+    }
+
+    const matchingJob = snapshot.active_jobs.find((item) => item.job_id === activeJobId);
+    if (matchingJob) {
+      mutateJob(matchingJob, false);
     }
   }, [activeJobId, mutateJob, mutateQueue, snapshot]);
 
@@ -73,6 +76,7 @@ const Reports = () => {
   );
 
   const currentJob = job || queue.find((item) => item.job_id === activeJobId) || null;
+
   const queueSummary = useMemo(
     () =>
       queue.reduce(
@@ -83,6 +87,22 @@ const Reports = () => {
         { queued: 0, running: 0, completed: 0, failed: 0 }
       ),
     [queue]
+  );
+
+  const reportMetrics = useMemo(
+    () => [
+      { label: "Recent jobs", value: queue.length, tone: "low" },
+      { label: "Queued", value: queueSummary.queued, tone: queueSummary.queued > 0 ? "medium" : "low" },
+      { label: "Running", value: queueSummary.running, tone: queueSummary.running > 0 ? "medium" : "low" },
+      { label: "Completed", value: queueSummary.completed, tone: "low" },
+      { label: "Failed", value: queueSummary.failed, tone: queueSummary.failed > 0 ? "critical" : "low" },
+      {
+        label: "Open flags",
+        value: selectedPatient?.risk_flags?.length || 0,
+        tone: (selectedPatient?.risk_flags?.length || 0) > 0 ? "high" : "low",
+      },
+    ],
+    [queue.length, queueSummary.completed, queueSummary.failed, queueSummary.queued, queueSummary.running, selectedPatient]
   );
 
   const workspaceError =
@@ -109,13 +129,12 @@ const Reports = () => {
     }
   };
 
-  const loading = patientsLoading || queueLoading;
-  if (loading) {
+  if (patientsLoading || queueLoading) {
     return (
       <div className="page-grid">
         <section className="panel full-span loading-panel">
           <div className="spinner" />
-          <p>Loading report workspace&hellip;</p>
+          <p>Loading report workspace...</p>
         </section>
       </div>
     );
@@ -139,29 +158,37 @@ const Reports = () => {
     <div className="page-grid reports-grid">
       <section className="hero-panel report-hero">
         <div>
-          <p className="eyebrow">Care report orchestration</p>
-          <h2>Generate patient briefing</h2>
-          <p className="subtle-copy">
-            Queue a durable clinical handoff package, track workflow stage progression, and deliver stored artifacts without
-            holding the request open.
-          </p>
+          <p className="eyebrow">Report operations</p>
+          <h2>Report workspace</h2>
+          <p className="subtle-copy">Queue patient report packages, watch execution, and pull finished artifacts.</p>
         </div>
 
         <div className="hero-badges">
           <span className={toneClassName(liveFeedConnected ? "low" : liveFeedError ? "high" : "medium")}>
-            live queue {lastEventAt ? new Date(lastEventAt).toLocaleTimeString() : "starting"}
+            Live queue {lastEventAt ? new Date(lastEventAt).toLocaleTimeString() : "starting"}
           </span>
-          <span className="tone tone-low">{queueSummary.queued} queued</span>
-          <span className="tone tone-medium">{queueSummary.running} running</span>
+          <span className="tone tone-low">{queueSummary.completed} completed</span>
           <span className={toneClassName(queueSummary.failed > 0 ? "critical" : "low")}>
-            {queueSummary.completed} completed
+            {queueSummary.failed} failed
           </span>
         </div>
       </section>
 
+      <section className="metrics-grid workspace-kpi-grid">
+        {reportMetrics.map((metric) => (
+          <article key={metric.label} className={`metric-card metric-card-${metric.tone}`}>
+            <span>{metric.label}</span>
+            <strong>{metric.value}</strong>
+          </article>
+        ))}
+      </section>
+
       <section className="panel panel-span-5 report-intake-panel">
         <div className="panel-header">
-          <h3>Report intake</h3>
+          <div className="panel-header-stack">
+            <h3>Report intake</h3>
+            <p>Select a patient and queue a new report package.</p>
+          </div>
           <span className="subtle-copy">{selectedPatient ? selectedPatient.care_unit : "Patient selection"}</span>
         </div>
 
@@ -201,32 +228,57 @@ const Reports = () => {
 
       <section className="panel panel-span-7">
         <div className="panel-header">
-          <h3>Active job detail</h3>
+          <div className="panel-header-stack">
+            <h3>Active job detail</h3>
+            <p>Track the selected job through each execution stage.</p>
+          </div>
           <span className="subtle-copy">{currentJob ? currentJob.job_id : "No active selection"}</span>
         </div>
 
         {currentJob ? (
           <article className="report-card report-job-card elevated-card">
             <div className="panel-header">
-              <div>
-                <strong>Patient {currentJob.patient_id}</strong>
-                <p className="subtle-copy">{new Date(currentJob.created_at).toLocaleString()}</p>
+              <div className="panel-header-stack">
+                <h4>Patient {currentJob.patient_id}</h4>
+                <p>{new Date(currentJob.created_at).toLocaleString()}</p>
               </div>
-              <span className={toneClassName(currentJob.status === "failed" ? "critical" : currentJob.status === "running" ? "medium" : "low")}>
+              <span
+                className={toneClassName(
+                  currentJob.status === "failed" ? "critical" : currentJob.status === "running" ? "medium" : "low"
+                )}
+              >
                 {currentJob.status}
               </span>
             </div>
 
-            <h4>{currentJob.workflow_stage.replaceAll("_", " ")}</h4>
+            <div className="registry-meta-grid">
+              <article>
+                <span>Workflow stage</span>
+                <strong>{currentJob.workflow_stage.replaceAll("_", " ")}</strong>
+              </article>
+              <article>
+                <span>Progress</span>
+                <strong>{currentJob.progress_percent}%</strong>
+              </article>
+              <article>
+                <span>Attempts</span>
+                <strong>
+                  {currentJob.attempt_count}/{currentJob.max_attempts}
+                </strong>
+              </article>
+              <article>
+                <span>Worker</span>
+                <strong>{currentJob.worker_id || "Dispatcher pending"}</strong>
+              </article>
+            </div>
+
             <div className="progress-track">
               <div className="progress-fill" style={{ width: `${currentJob.progress_percent}%` }} />
             </div>
+
             <div className="report-job-meta">
-              <span>{currentJob.progress_percent}% complete</span>
-              <span>
-                attempt {currentJob.attempt_count}/{currentJob.max_attempts}
-              </span>
-              <span>{currentJob.worker_id || "dispatcher pending"}</span>
+              <span>Created {new Date(currentJob.created_at).toLocaleString()}</span>
+              <span>Updated {new Date(currentJob.updated_at).toLocaleString()}</span>
             </div>
 
             {currentJob.error ? <p className="error-text">{currentJob.error}</p> : null}
@@ -248,16 +300,17 @@ const Reports = () => {
         ) : (
           <article className="empty-state-card elevated-card">
             <strong>No active report job</strong>
-            <p className="subtle-copy">
-              Queue a report to watch the workflow stage move from claim, summary assembly, artifact persistence, and delivery.
-            </p>
+            <p className="subtle-copy">Queue a report to watch execution move through the live workflow.</p>
           </article>
         )}
       </section>
 
       <section className="panel full-span">
         <div className="panel-header">
-          <h3>Queue history</h3>
+          <div className="panel-header-stack">
+            <h3>Queue history</h3>
+            <p>Recent report packages and their latest execution state.</p>
+          </div>
           <span className="subtle-copy">{queue.length} recent jobs</span>
         </div>
 
@@ -269,10 +322,10 @@ const Reports = () => {
               type="button"
               onClick={() => setActiveJobId(item.job_id)}
             >
-              <div>
+              <div className="directory-card-copy">
                 <strong>Patient {item.patient_id}</strong>
                 <p className="subtle-copy">
-                  {item.workflow_stage.replaceAll("_", " ")} | {item.progress_percent}% complete
+                  {item.workflow_stage.replaceAll("_", " ")} &middot; {item.progress_percent}% complete
                 </p>
               </div>
               <div className="queue-meta">
