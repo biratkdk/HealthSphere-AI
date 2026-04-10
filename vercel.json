@@ -12,6 +12,7 @@
     "AUTO_MIGRATE":             "true",
     "SEED_DEMO_DATA":           "true",
     "SECURITY_HEADERS_ENABLED": "true",
-    "METRICS_ENABLED":          "false"
+    "METRICS_ENABLED":          "false",
+    "ALLOWED_ORIGINS":          "https://health-sphere-ai-pi.vercel.app,http://localhost:3000,http://localhost:5173"
   }
 }
