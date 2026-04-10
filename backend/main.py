@@ -32,7 +32,15 @@ def bootstrap_application() -> None:
 
     settings = get_settings()
     settings.validate_runtime_secrets()
-    if settings.should_auto_migrate:
+
+    _db_url = settings.resolved_database_url
+    _is_in_memory = _db_url in {"sqlite://", "sqlite:///:memory:"}
+
+    if _is_in_memory:
+        # Alembic uses NullPool which creates a separate in-memory connection —
+        # tables would disappear. Use init_db() so the shared StaticPool engine is used.
+        init_db()
+    elif settings.should_auto_migrate:
         run_migrations()
     elif settings.is_local_like:
         init_db()
