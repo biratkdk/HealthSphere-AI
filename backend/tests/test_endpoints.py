@@ -261,6 +261,31 @@ def test_notifications_and_analytics() -> None:
         assert mark_response.json()["is_read"] is True
 
 
+def test_population_operations_board() -> None:
+    headers = auth_headers()
+    task_response = client.post(
+        "/patients/1001/tasks",
+        headers=headers,
+        json={
+            "title": "Escalate rapid review",
+            "detail": "Rapid review is overdue and should appear on the unit command board.",
+            "priority": "critical",
+            "assignee_username": "clinician",
+            "due_at": "2020-01-01T00:00:00Z",
+        },
+    )
+    assert task_response.status_code == 200
+
+    response = client.get("/operations/population-board", headers=headers)
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["totals"]["total_patients"] >= 1
+    assert payload["care_units"]
+    assert payload["hottest_patients"]
+    assert any(patient["patient_id"] == 1001 for patient in payload["hottest_patients"])
+    assert any(task["patient_id"] == 1001 for task in payload["overdue_tasks"])
+
+
 def test_imaging_analysis() -> None:
     payload = FIXTURE_IMAGE.read_bytes()
     response = client.post(
@@ -274,6 +299,53 @@ def test_imaging_analysis() -> None:
     assert "result" in body
     assert 0 <= body["confidence"] <= 1
     assert body["study_reference"]
+
+
+def test_imaging_workbench_and_review_updates() -> None:
+    headers = auth_headers()
+    payload = FIXTURE_IMAGE.read_bytes()
+    response = client.post(
+        "/analyze/imaging",
+        data={"patient_id": "1001"},
+        files={"file": ("scan.png", payload, "image/png")},
+        headers=headers,
+    )
+    assert response.status_code == 200
+    study_id = response.json()["study_reference"]
+
+    workbench_response = client.get("/imaging/workbench", headers=headers)
+    assert workbench_response.status_code == 200
+    items = workbench_response.json()["items"]
+    matching = next(item for item in items if item["study"]["study_id"] == study_id)
+    assert matching["study"]["review_status"] == "pending_review"
+    assert matching["study"]["priority"] in {"routine", "priority", "urgent"}
+
+    review_response = client.patch(
+        f"/imaging/studies/{study_id}/review",
+        headers=headers,
+        json={
+            "review_status": "reviewed",
+            "priority": "priority",
+            "review_notes": "Reviewed against the current respiratory decline context.",
+        },
+    )
+    assert review_response.status_code == 200
+    reviewed = review_response.json()
+    assert reviewed["review_status"] == "reviewed"
+    assert reviewed["reviewed_by"] == "clinician"
+
+    signoff_response = client.patch(
+        f"/imaging/studies/{study_id}/review",
+        headers=headers,
+        json={
+            "review_status": "signed_off",
+            "review_notes": "Signed off after clinical review.",
+        },
+    )
+    assert signoff_response.status_code == 200
+    signed_off = signoff_response.json()
+    assert signed_off["review_status"] == "signed_off"
+    assert signed_off["signed_off_by"] == "clinician"
 
 
 def test_dicom_imaging_analysis() -> None:

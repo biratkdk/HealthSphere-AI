@@ -31,6 +31,8 @@ from backend.app.db.repository import (
     _alert_to_schema,
     _build_user_preferences,
     _coerce_preferences,
+    _derive_imaging_priority,
+    _derive_review_due_at,
     _ensure_unique_username,
     _ensure_utc,
     _imaging_study_to_schema,
@@ -47,13 +49,25 @@ from backend.app.models import (
     CareUnitSummary,
     HandoffNote,
     HandoffNoteCreateRequest,
+    ImagingLinkedReportJob,
     ImagingStudyRecord,
+    ImagingStudyReviewRequest,
+    ImagingWorkbench,
+    ImagingWorkbenchItem,
+    ImagingWorkbenchSummary,
     InviteCodeCreateRequest,
     InviteCodeRecord,
     Notification,
     OperationsLiveSnapshot,
     OrganizationSummary,
     PatientRecord,
+    PopulationAlertQueueItem,
+    PopulationBoardTotals,
+    PopulationCareUnitBoard,
+    PopulationImagingQueueItem,
+    PopulationOperationsBoard,
+    PopulationPatientCard,
+    PopulationTaskQueueItem,
     PatientTask,
     PatientTaskCreateRequest,
     PatientTaskUpdateRequest,
@@ -897,6 +911,7 @@ def create_imaging_study(
     uploaded_by: str,
     analysis_payload: dict | None,
 ) -> ImagingStudyRecord:
+    priority = _derive_imaging_priority(analysis_payload)
     study = ImagingStudyORM(
         study_id=str(uuid4()),
         organization_id=organization_id,
@@ -905,6 +920,15 @@ def create_imaging_study(
         content_type=content_type,
         storage_uri=storage_uri,
         uploaded_by=uploaded_by,
+        priority=priority,
+        review_status="pending_review",
+        review_due_at=_derive_review_due_at(priority),
+        review_notes=None,
+        escalation_reason=None,
+        reviewed_by=None,
+        reviewed_at=None,
+        signed_off_by=None,
+        signed_off_at=None,
         analysis_payload=analysis_payload,
         created_at=datetime.now(UTC),
     )
@@ -931,6 +955,192 @@ def get_imaging_study_record(db: Session, organization_id: int, study_id: str) -
             ImagingStudyORM.study_id == study_id,
         )
     ).first()
+
+
+def update_imaging_study_review(
+    db: Session,
+    *,
+    organization_id: int,
+    study_id: str,
+    actor_username: str,
+    payload: ImagingStudyReviewRequest,
+) -> ImagingStudyRecord | None:
+    study = get_imaging_study_record(db, organization_id, study_id)
+    if study is None:
+        return None
+
+    now = datetime.now(UTC)
+    if payload.priority is not None:
+        study.priority = payload.priority
+    priority = getattr(study, "priority", "routine")
+
+    if payload.review_notes is not None:
+        study.review_notes = _normalize_optional_text(payload.review_notes)
+
+    study.review_status = payload.review_status
+
+    if payload.review_status == "pending_review":
+        study.review_due_at = _derive_review_due_at(priority, reference=now)
+        study.signed_off_by = None
+        study.signed_off_at = None
+        if payload.escalation_reason is not None:
+            study.escalation_reason = _normalize_optional_text(payload.escalation_reason)
+    elif payload.review_status == "reviewed":
+        study.reviewed_by = actor_username
+        study.reviewed_at = now
+        study.review_due_at = now
+        study.signed_off_by = None
+        study.signed_off_at = None
+        study.escalation_reason = None
+    elif payload.review_status == "escalated":
+        study.reviewed_by = actor_username
+        study.reviewed_at = now
+        study.review_due_at = now + timedelta(minutes=15)
+        study.signed_off_by = None
+        study.signed_off_at = None
+        study.escalation_reason = (
+            _normalize_optional_text(payload.escalation_reason) or "Escalated for additional clinical review."
+        )
+    elif payload.review_status == "signed_off":
+        study.reviewed_by = study.reviewed_by or actor_username
+        study.reviewed_at = study.reviewed_at or now
+        study.review_due_at = now
+        study.signed_off_by = actor_username
+        study.signed_off_at = now
+        if payload.escalation_reason is not None:
+            study.escalation_reason = _normalize_optional_text(payload.escalation_reason)
+
+    db.add(study)
+    db.commit()
+    db.refresh(study)
+    return _imaging_study_to_schema(study)
+
+
+def _imaging_workbench_sort_key(study: ImagingStudyORM) -> tuple[int, int, datetime, float]:
+    status_order = {
+        "escalated": 0,
+        "pending_review": 1,
+        "reviewed": 2,
+        "signed_off": 3,
+    }
+    priority_order = {
+        "urgent": 0,
+        "priority": 1,
+        "routine": 2,
+    }
+    due_at = _ensure_utc(getattr(study, "review_due_at", None)) or datetime.max.replace(tzinfo=UTC)
+    created_at = _ensure_utc(study.created_at) or datetime.now(UTC)
+    return (
+        status_order.get(getattr(study, "review_status", "pending_review"), 9),
+        priority_order.get(getattr(study, "priority", "routine"), 9),
+        due_at,
+        -created_at.timestamp(),
+    )
+
+
+def _linked_report_jobs_for_patients(db: Session, organization_id: int, patient_ids: set[int]) -> dict[int, list[ReportJobORM]]:
+    if not patient_ids:
+        return {}
+
+    jobs = db.scalars(
+        select(ReportJobORM)
+        .where(ReportJobORM.organization_id == organization_id, ReportJobORM.patient_id.in_(patient_ids))
+        .order_by(desc(ReportJobORM.created_at))
+    ).all()
+    grouped: dict[int, list[ReportJobORM]] = {}
+    for job in jobs:
+        grouped.setdefault(job.patient_id, []).append(job)
+    return grouped
+
+
+def build_imaging_workbench(
+    db: Session,
+    *,
+    organization_id: int,
+    limit: int = 24,
+    review_status: str | None = None,
+) -> ImagingWorkbench:
+    statement = (
+        select(ImagingStudyORM)
+        .where(ImagingStudyORM.organization_id == organization_id)
+        .options(
+            selectinload(ImagingStudyORM.patient).selectinload(PatientORM.alerts),
+            selectinload(ImagingStudyORM.patient).selectinload(PatientORM.tasks),
+            selectinload(ImagingStudyORM.patient).selectinload(PatientORM.handoff_notes),
+        )
+    )
+    if review_status and review_status != "all":
+        statement = statement.where(ImagingStudyORM.review_status == review_status)
+
+    studies = db.scalars(statement.order_by(desc(ImagingStudyORM.created_at)).limit(max(limit * 3, limit))).all()
+    studies = sorted(studies, key=_imaging_workbench_sort_key)[:limit]
+    patient_ids = {study.patient_id for study in studies}
+    report_jobs_by_patient = _linked_report_jobs_for_patients(db, organization_id, patient_ids)
+
+    items: list[ImagingWorkbenchItem] = []
+    for study in studies:
+        patient = study.patient
+        if patient is None:
+            continue
+
+        study_schema = _imaging_study_to_schema(study)
+        unresolved_alerts = sum(not alert.acknowledged for alert in patient.alerts)
+        overdue_tasks = sum(
+            1 for task in (_task_to_schema(task) for task in patient.tasks) if task.status != "completed" and task.is_overdue
+        )
+        related_jobs = report_jobs_by_patient.get(patient.patient_id, [])[:2]
+        linked_reports = [
+            ImagingLinkedReportJob(
+                job_id=job.job_id,
+                status=job.status,  # type: ignore[arg-type]
+                workflow_stage=job.workflow_stage,
+                progress_percent=job.progress_percent,
+                created_at=_ensure_utc(job.created_at) or datetime.now(UTC),
+            )
+            for job in related_jobs
+        ]
+
+        if study_schema.review_status == "escalated":
+            next_action = study_schema.escalation_reason or "Resolve the escalation and either review or sign off the study."
+        elif study_schema.review_status == "pending_review":
+            next_action = (
+                study_schema.analysis.suggested_next_step
+                if study_schema.analysis is not None
+                else "Review the study and record the triage outcome."
+            )
+        elif study_schema.review_status == "reviewed":
+            next_action = "Sign off the study or escalate it if the report package needs more review."
+        else:
+            next_action = "Study signed off. Continue routine workflow monitoring."
+
+        items.append(
+            ImagingWorkbenchItem(
+                study=study_schema,
+                patient_name=patient.name,
+                care_unit=patient.care_unit,
+                diagnosis=patient.diagnosis,
+                risk_band=_patient_to_schema(patient).risk_band,  # type: ignore[arg-type]
+                unresolved_alerts=unresolved_alerts,
+                overdue_tasks=overdue_tasks,
+                next_action=next_action,
+                linked_reports=linked_reports,
+            )
+        )
+
+    return ImagingWorkbench(
+        generated_at=datetime.now(UTC),
+        summary=ImagingWorkbenchSummary(
+            total=len(items),
+            pending_review=sum(item.study.review_status == "pending_review" for item in items),
+            reviewed=sum(item.study.review_status == "reviewed" for item in items),
+            escalated=sum(item.study.review_status == "escalated" for item in items),
+            signed_off=sum(item.study.review_status == "signed_off" for item in items),
+            urgent=sum(item.study.priority == "urgent" for item in items),
+            priority=sum(item.study.priority in {"urgent", "priority"} for item in items),
+            overdue=sum(item.study.is_review_overdue for item in items),
+        ),
+        items=items,
+    )
 
 
 def create_report_job(

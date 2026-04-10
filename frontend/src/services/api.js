@@ -188,6 +188,8 @@ export const apiFetcher = async ([resource, ...args]) => {
       return getAlerts();
     case "analytics":
       return getAnalyticsOverview();
+    case "populationBoard":
+      return getPopulationOperationsBoard();
     case "notifications":
       return getNotifications(args[0], args[1]);
     case "models":
@@ -196,6 +198,8 @@ export const apiFetcher = async ([resource, ...args]) => {
       return getReportJobs(args[0]);
     case "reportJob":
       return getReportJob(args[0]);
+    case "imagingWorkbench":
+      return getImagingWorkbench(args[0], args[1]);
     case "authSessions":
       return getAuthSessions();
     case "auditLogs":
@@ -338,6 +342,11 @@ export const getAnalyticsOverview = async () => {
   return response.data;
 };
 
+export const getPopulationOperationsBoard = async () => {
+  const response = await api.get("/operations/population-board");
+  return response.data;
+};
+
 export const getNotifications = async (limit = 20, unreadOnly = false) => {
   const response = await api.get(`/notifications?limit=${limit}&unread_only=${unreadOnly}`);
   return response.data;
@@ -365,6 +374,18 @@ export const analyzeImaging = async (file, patientId) => {
       "Content-Type": "multipart/form-data",
     },
   });
+  return response.data;
+};
+
+export const getImagingWorkbench = async (reviewStatus = "all", limit = 24) => {
+  const response = await api.get(
+    `/imaging/workbench?review_status=${encodeURIComponent(reviewStatus)}&limit=${encodeURIComponent(limit)}`
+  );
+  return response.data;
+};
+
+export const updateImagingStudyReview = async (studyId, payload) => {
+  const response = await api.patch(`/imaging/studies/${studyId}/review`, payload);
   return response.data;
 };
 

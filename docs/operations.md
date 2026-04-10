@@ -38,6 +38,8 @@ Primary metrics:
 Operational views:
 
 - dashboard queue summary
+- population operations board
+- imaging review workbench
 - admin audit history
 - notification inbox
 - report workflow stage progression

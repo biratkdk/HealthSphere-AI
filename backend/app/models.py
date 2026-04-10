@@ -11,6 +11,8 @@ RoleName = Literal["admin", "clinician", "analyst", "service"]
 AuthProviderName = Literal["local", "oidc", "google", "facebook", "service"]
 TaskStatus = Literal["open", "in_progress", "blocked", "completed"]
 TaskPriority = Literal["low", "medium", "high", "critical"]
+ImagingPriority = Literal["routine", "priority", "urgent"]
+ImagingReviewStatus = Literal["pending_review", "reviewed", "escalated", "signed_off"]
 InviteRole = Literal["clinician", "analyst"]
 InviteStatus = Literal["pending", "accepted", "expired", "revoked"]
 TimelineCategory = Literal["lab", "imaging", "alert", "report", "notification", "task", "handoff"]
@@ -120,7 +122,26 @@ class ImagingStudyRecord(APIModel):
     storage_uri: str
     uploaded_by: str
     created_at: datetime
+    priority: ImagingPriority = "routine"
+    review_status: ImagingReviewStatus = "pending_review"
+    review_due_at: datetime | None = None
+    review_due_in_minutes: int | None = None
+    review_due_label: str | None = None
+    is_review_overdue: bool = False
+    review_notes: str | None = None
+    escalation_reason: str | None = None
+    reviewed_by: str | None = None
+    reviewed_at: datetime | None = None
+    signed_off_by: str | None = None
+    signed_off_at: datetime | None = None
     analysis: ImagingAnalysisResponse | None = None
+
+
+class ImagingStudyReviewRequest(APIModel):
+    review_status: ImagingReviewStatus
+    priority: ImagingPriority | None = None
+    review_notes: str | None = Field(default=None, max_length=2000)
+    escalation_reason: str | None = Field(default=None, max_length=1000)
 
 
 class PatientTask(APIModel):
@@ -484,6 +505,127 @@ class AnalyticsOverview(APIModel):
     report_queue: ReportQueueSummary
     care_units: list[CareUnitSummary]
     capabilities: SystemCapability
+
+
+class PopulationBoardTotals(APIModel):
+    total_patients: int
+    high_risk_patients: int
+    unresolved_alerts: int
+    overdue_tasks: int
+    pending_imaging_reviews: int
+    running_reports: int
+
+
+class PopulationCareUnitBoard(APIModel):
+    care_unit: str
+    patient_count: int
+    high_risk_patients: int
+    unresolved_alerts: int
+    overdue_tasks: int
+    pending_imaging_reviews: int
+    running_reports: int
+
+
+class PopulationPatientCard(APIModel):
+    patient_id: int
+    name: str
+    care_unit: str
+    diagnosis: str
+    risk_band: Severity
+    icu_risk: float = Field(..., ge=0.0, le=1.0)
+    unresolved_alerts: int = Field(default=0, ge=0)
+    critical_alerts: int = Field(default=0, ge=0)
+    overdue_tasks: int = Field(default=0, ge=0)
+    blocked_tasks: int = Field(default=0, ge=0)
+    unassigned_tasks: int = Field(default=0, ge=0)
+    pending_imaging_reviews: int = Field(default=0, ge=0)
+    handoff_age_minutes: int | None = Field(default=None, ge=0)
+    primary_signal: str
+    next_action: str | None = None
+    priority_tone: Severity = "low"
+
+
+class PopulationTaskQueueItem(APIModel):
+    task_id: str
+    patient_id: int
+    patient_name: str
+    care_unit: str
+    title: str
+    status: TaskStatus
+    priority: TaskPriority
+    assignee_username: str | None = None
+    due_label: str | None = None
+    sla_status: TaskSlaStatus
+
+
+class PopulationAlertQueueItem(APIModel):
+    alert_id: str
+    patient_id: int
+    patient_name: str
+    care_unit: str
+    severity: Severity
+    title: str
+    description: str
+    created_at: datetime
+
+
+class PopulationImagingQueueItem(APIModel):
+    study_id: str
+    patient_id: int
+    patient_name: str
+    care_unit: str
+    priority: ImagingPriority
+    review_status: ImagingReviewStatus
+    review_due_label: str | None = None
+    anomaly_score: float = Field(default=0.0, ge=0.0, le=1.0)
+    suggested_next_step: str | None = None
+
+
+class PopulationOperationsBoard(APIModel):
+    generated_at: datetime
+    totals: PopulationBoardTotals
+    care_units: list[PopulationCareUnitBoard]
+    hottest_patients: list[PopulationPatientCard]
+    overdue_tasks: list[PopulationTaskQueueItem]
+    unresolved_alerts: list[PopulationAlertQueueItem]
+    imaging_queue: list[PopulationImagingQueueItem]
+
+
+class ImagingLinkedReportJob(APIModel):
+    job_id: str
+    status: JobStatus
+    workflow_stage: str
+    progress_percent: int = Field(default=0, ge=0, le=100)
+    created_at: datetime
+
+
+class ImagingWorkbenchSummary(APIModel):
+    total: int
+    pending_review: int
+    reviewed: int
+    escalated: int
+    signed_off: int
+    urgent: int
+    priority: int
+    overdue: int
+
+
+class ImagingWorkbenchItem(APIModel):
+    study: ImagingStudyRecord
+    patient_name: str
+    care_unit: str
+    diagnosis: str
+    risk_band: Severity
+    unresolved_alerts: int = Field(default=0, ge=0)
+    overdue_tasks: int = Field(default=0, ge=0)
+    next_action: str | None = None
+    linked_reports: list[ImagingLinkedReportJob] = Field(default_factory=list)
+
+
+class ImagingWorkbench(APIModel):
+    generated_at: datetime
+    summary: ImagingWorkbenchSummary
+    items: list[ImagingWorkbenchItem]
 
 
 class OperationsLiveSnapshot(APIModel):

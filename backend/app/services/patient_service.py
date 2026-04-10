@@ -5,11 +5,13 @@ from sqlalchemy.orm import Session
 
 from backend.app.db.enterprise_repository import (
     alerts_for_patient,
+    build_imaging_workbench,
     build_patient_timeline,
     get_patient,
     list_handoff_notes,
     list_patient_tasks,
     list_patients,
+    list_report_jobs,
 )
 from backend.app.ml_utils import predict_disease, predict_icu_risk, recommend_treatment
 from backend.app.models import (
@@ -17,6 +19,13 @@ from backend.app.models import (
     DiseaseRiskResponse,
     HandoffNote,
     IcuRiskResponse,
+    PopulationAlertQueueItem,
+    PopulationBoardTotals,
+    PopulationCareUnitBoard,
+    PopulationImagingQueueItem,
+    PopulationOperationsBoard,
+    PopulationPatientCard,
+    PopulationTaskQueueItem,
     MissionControlAction,
     MissionControlSignal,
     PatientMissionControl,
@@ -456,4 +465,188 @@ def get_patient_summary_for_organization(db: Session, organization_id: int, pati
             handoffs=recent_handoffs,
             timeline=timeline,
         ),
+    )
+
+
+def build_population_operations_board(db: Session, current_user: UserProfile) -> PopulationOperationsBoard:
+    organization_id = _resolve_organization_id(current_user)
+    patients = list_patients(db, organization_id, limit=200)
+    if not patients:
+        return PopulationOperationsBoard(
+            generated_at=datetime.now(UTC),
+            totals=PopulationBoardTotals(
+                total_patients=0,
+                high_risk_patients=0,
+                unresolved_alerts=0,
+                overdue_tasks=0,
+                pending_imaging_reviews=0,
+                running_reports=0,
+            ),
+            care_units=[],
+            hottest_patients=[],
+            overdue_tasks=[],
+            unresolved_alerts=[],
+            imaging_queue=[],
+        )
+
+    summaries = [get_patient_summary_for_organization(db, organization_id, patient.patient_id) for patient in patients]
+    imaging_workbench = build_imaging_workbench(db, organization_id=organization_id, limit=100)
+    running_report_jobs = [job for job in list_report_jobs(db, organization_id, limit=200) if job.status == "running"]
+
+    severity_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+    running_reports_by_patient: dict[int, int] = {}
+    for job in running_report_jobs:
+        running_reports_by_patient[job.patient_id] = running_reports_by_patient.get(job.patient_id, 0) + 1
+
+    pending_imaging_by_patient: dict[int, int] = {}
+    for item in imaging_workbench.items:
+        if item.study.review_status != "signed_off":
+            pending_imaging_by_patient[item.study.patient_id] = pending_imaging_by_patient.get(item.study.patient_id, 0) + 1
+
+    patient_cards: list[PopulationPatientCard] = []
+    overdue_task_items: list[PopulationTaskQueueItem] = []
+    unresolved_alert_items: list[PopulationAlertQueueItem] = []
+
+    for summary in summaries:
+        workflow = summary.mission_control.workflow
+        critical_alerts = sum(alert.severity == "critical" for alert in summary.open_alerts)
+        pending_imaging_reviews = pending_imaging_by_patient.get(summary.patient.patient_id, 0)
+        if critical_alerts or workflow.overdue_tasks:
+            priority_tone = "critical"
+        elif summary.icu_risk.risk_band in {"critical", "high"} or workflow.blocked_tasks or pending_imaging_reviews:
+            priority_tone = "high"
+        elif summary.open_alerts or workflow.unassigned_tasks:
+            priority_tone = "medium"
+        else:
+            priority_tone = "low"
+
+        primary_signal = (
+            summary.mission_control.why_now[0].title
+            if summary.mission_control.why_now
+            else summary.mission_control.changed[0].title
+            if summary.mission_control.changed
+            else summary.patient.diagnosis
+        )
+        next_action = summary.mission_control.next_actions[0].title if summary.mission_control.next_actions else None
+
+        patient_cards.append(
+            PopulationPatientCard(
+                patient_id=summary.patient.patient_id,
+                name=summary.patient.name,
+                care_unit=summary.patient.care_unit,
+                diagnosis=summary.patient.diagnosis,
+                risk_band=summary.icu_risk.risk_band,
+                icu_risk=summary.icu_risk.icu_risk,
+                unresolved_alerts=len(summary.open_alerts),
+                critical_alerts=critical_alerts,
+                overdue_tasks=workflow.overdue_tasks,
+                blocked_tasks=workflow.blocked_tasks,
+                unassigned_tasks=workflow.unassigned_tasks,
+                pending_imaging_reviews=pending_imaging_reviews,
+                handoff_age_minutes=workflow.handoff_age_minutes,
+                primary_signal=primary_signal,
+                next_action=next_action,
+                priority_tone=priority_tone,
+            )
+        )
+
+        for task in summary.tasks:
+            if task.status != "completed" and task.is_overdue:
+                overdue_task_items.append(
+                    PopulationTaskQueueItem(
+                        task_id=task.task_id,
+                        patient_id=summary.patient.patient_id,
+                        patient_name=summary.patient.name,
+                        care_unit=summary.patient.care_unit,
+                        title=task.title,
+                        status=task.status,
+                        priority=task.priority,
+                        assignee_username=task.assignee_username,
+                        due_label=task.due_label,
+                        sla_status=task.sla_status,
+                    )
+                )
+
+        for alert in summary.open_alerts:
+            unresolved_alert_items.append(
+                PopulationAlertQueueItem(
+                    alert_id=alert.alert_id,
+                    patient_id=summary.patient.patient_id,
+                    patient_name=summary.patient.name,
+                    care_unit=summary.patient.care_unit,
+                    severity=alert.severity,
+                    title=alert.title,
+                    description=alert.description,
+                    created_at=alert.created_at,
+                )
+            )
+
+    patient_cards.sort(
+        key=lambda item: (
+            severity_order[item.priority_tone],
+            -item.icu_risk,
+            -item.unresolved_alerts,
+            -item.overdue_tasks,
+            -item.pending_imaging_reviews,
+        )
+    )
+    overdue_task_items.sort(
+        key=lambda item: (
+            severity_order["critical" if item.sla_status == "overdue" else "high" if item.status == "blocked" else item.priority],
+            item.patient_name,
+        )
+    )
+    unresolved_alert_items.sort(key=lambda item: (severity_order[item.severity], -item.created_at.timestamp()))
+
+    care_unit_rollup: dict[str, PopulationCareUnitBoard] = {}
+    for card in patient_cards:
+        board = care_unit_rollup.get(card.care_unit)
+        if board is None:
+            board = PopulationCareUnitBoard(
+                care_unit=card.care_unit,
+                patient_count=0,
+                high_risk_patients=0,
+                unresolved_alerts=0,
+                overdue_tasks=0,
+                pending_imaging_reviews=0,
+                running_reports=0,
+            )
+            care_unit_rollup[card.care_unit] = board
+        board.patient_count += 1
+        board.high_risk_patients += int(card.risk_band in {"high", "critical"} or card.icu_risk >= 0.65)
+        board.unresolved_alerts += card.unresolved_alerts
+        board.overdue_tasks += card.overdue_tasks
+        board.pending_imaging_reviews += card.pending_imaging_reviews
+        board.running_reports += running_reports_by_patient.get(card.patient_id, 0)
+
+    imaging_queue = [
+        PopulationImagingQueueItem(
+            study_id=item.study.study_id,
+            patient_id=item.study.patient_id,
+            patient_name=item.patient_name,
+            care_unit=item.care_unit,
+            priority=item.study.priority,
+            review_status=item.study.review_status,
+            review_due_label=item.study.review_due_label,
+            anomaly_score=item.study.analysis.anomaly_score if item.study.analysis else 0.0,
+            suggested_next_step=item.study.analysis.suggested_next_step if item.study.analysis else item.next_action,
+        )
+        for item in imaging_workbench.items[:8]
+    ]
+
+    return PopulationOperationsBoard(
+        generated_at=datetime.now(UTC),
+        totals=PopulationBoardTotals(
+            total_patients=len(patient_cards),
+            high_risk_patients=sum(card.risk_band in {"high", "critical"} or card.icu_risk >= 0.65 for card in patient_cards),
+            unresolved_alerts=sum(card.unresolved_alerts for card in patient_cards),
+            overdue_tasks=sum(card.overdue_tasks for card in patient_cards),
+            pending_imaging_reviews=sum(card.pending_imaging_reviews for card in patient_cards),
+            running_reports=len(running_report_jobs),
+        ),
+        care_units=sorted(care_unit_rollup.values(), key=lambda item: (-item.unresolved_alerts, item.care_unit)),
+        hottest_patients=patient_cards[:10],
+        overdue_tasks=overdue_task_items[:10],
+        unresolved_alerts=unresolved_alert_items[:10],
+        imaging_queue=imaging_queue,
     )

@@ -8,6 +8,8 @@ HealthSphere AI is a full-stack clinical intelligence platform for patient risk 
 - Durable report workflow with queue-first job creation, staged execution state, retry handling, lease-based dispatcher claims, and Celery support for worker deployments
 - Live operations feed built on secure stream tokens and server-sent events for queue and inbox refresh
 - React operator console built with Vite, route-level code splitting, SWR data orchestration, patient directory search, collaboration workspaces, profile management, notifications, reports, and admin review
+- Population Operations board for care-unit pressure, hottest-patient triage, overdue workflow, unresolved alerts, and imaging review demand
+- Imaging review workbench with queue-first study handling, review states, escalation flow, and linked report creation
 - Relational persistence for users, patients, labs, alerts, notifications, imaging studies, audit history, and report jobs
 - Storage abstraction for uploaded studies and generated artifacts with local and Vercel Blob implementations
 - ML workspace with notebooks, sample datasets, training scripts, model artifacts, retraining helpers, and Airflow DAGs
@@ -142,6 +144,7 @@ Bootstrap users are created on first start if no users exist. Replace the defaul
 
 - Patient roster
 - Risk and alert review
+- Population Operations board
 - Notification inbox
 - Model registry visibility
 - System capability summary
@@ -158,6 +161,8 @@ Bootstrap users are created on first start if no users exist. Replace the defaul
 
 - File upload
 - Immediate analysis response
+- Imaging review workbench
+- Review-state updates with reviewer notes and escalation capture
 - Stored study retrieval
 - Notification creation after upload
 - Patient-linked imaging submission with required patient association
@@ -250,6 +255,7 @@ python scripts/smoke_test.py --base-url http://localhost:8000 --username clinici
 - [Deployment guide](d:/HealthSphere%20AI/docs/deployment.md)
 - [Operations guide](d:/HealthSphere%20AI/docs/operations.md)
 - [Presentation audit](d:/HealthSphere%20AI/docs/presentation_audit.md)
+- [Population and imaging sprint](d:/HealthSphere%20AI/docs/population_imaging_sprint.md)
 - [Security notes](d:/HealthSphere%20AI/docs/security.md)
 - [ML pipeline](d:/HealthSphere%20AI/docs/ml_pipeline.md)
 - [User manual](d:/HealthSphere%20AI/docs/user_manual.md)

@@ -1701,6 +1701,113 @@ a:focus-visible {
   font-size: 0.92rem;
 }
 
+.population-filter-row {
+  margin-top: 4px;
+}
+
+.population-unit-grid,
+.population-command-list,
+.workbench-detail-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.population-unit-grid {
+  margin-top: 16px;
+}
+
+.population-command-list {
+  margin-top: 16px;
+}
+
+.population-patient-card,
+.workbench-analysis-card,
+.workbench-form-card,
+.workbench-linked-reports {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 24px;
+  border: 1px solid var(--line);
+  background: var(--surface-strong);
+}
+
+.population-patient-card:hover {
+  border-color: rgba(11, 111, 112, 0.24);
+  box-shadow: 0 16px 32px rgba(11, 111, 112, 0.08);
+}
+
+.population-card-header,
+.workbench-detail-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.population-primary-signal {
+  line-height: 1.6;
+}
+
+.population-next-action {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: rgba(19, 38, 47, 0.04);
+}
+
+.population-meta-label {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(11, 111, 112, 0.1);
+  color: var(--teal);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.workbench-study-list {
+  margin-top: 16px;
+}
+
+.workbench-study-card {
+  width: 100%;
+}
+
+.workbench-detail-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+.workbench-analysis-card,
+.workbench-form-card,
+.workbench-linked-reports {
+  min-width: 0;
+}
+
+.workbench-analysis-card {
+  grid-column: span 2;
+}
+
+.workbench-form-card textarea {
+  min-height: 120px;
+}
+
+.workbench-linked-reports {
+  grid-column: span 2;
+}
+
+.workbench-actions {
+  justify-content: flex-start;
+}
+
 .report-queue-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -1950,7 +2057,8 @@ a:focus-visible {
   .registry-meta-grid,
   .mission-control-grid,
   .mission-form-grid,
-  .handoff-section-grid {
+  .handoff-section-grid,
+  .workbench-detail-grid {
     grid-template-columns: 1fr;
   }
 
@@ -2084,7 +2192,9 @@ a:focus-visible {
   .audit-row-top,
   .audit-meta,
   .mission-control-head,
-  .workflow-task-top {
+  .workflow-task-top,
+  .population-card-header,
+  .workbench-detail-top {
     flex-direction: column;
     align-items: flex-start;
   }
@@ -2208,6 +2318,20 @@ a:focus-visible {
   border-color: rgba(255, 151, 115, 0.18);
   background: rgba(255, 151, 115, 0.14);
   color: #ffb69a;
+}
+
+[data-theme="dark"] .population-patient-card,
+[data-theme="dark"] .workbench-analysis-card,
+[data-theme="dark"] .workbench-form-card,
+[data-theme="dark"] .workbench-linked-reports,
+[data-theme="dark"] .population-next-action {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(125, 183, 214, 0.12);
+}
+
+[data-theme="dark"] .population-meta-label {
+  background: rgba(96, 233, 211, 0.12);
+  color: #84f0df;
 }
 
 [data-theme="dark"] .nav-links a:hover,

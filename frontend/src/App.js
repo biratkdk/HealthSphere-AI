@@ -42,15 +42,19 @@ import AuthCallback from "./pages/AuthCallback";
 
 const Admin = lazy(() => import("./pages/Admin"));
 const Home = lazy(() => import("./pages/Home"));
+const ImagingWorkbench = lazy(() => import("./pages/ImagingWorkbench"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const Patients = lazy(() => import("./pages/Patients"));
 const PatientDetails = lazy(() => import("./pages/PatientDetails"));
+const Population = lazy(() => import("./pages/Population"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Reports = lazy(() => import("./pages/Reports"));
 
 const mobileRoutes = [
   { to: "/", label: "Operations", shortLabel: "Ops", end: true },
+  { to: "/population", label: "Population", shortLabel: "Units" },
   { to: "/patients", label: "Patients", shortLabel: "Patients" },
+  { to: "/imaging", label: "Imaging", shortLabel: "Imaging" },
   { to: "/reports", label: "Reports", shortLabel: "Reports" },
   { to: "/notifications", label: "Inbox", shortLabel: "Inbox" },
   { to: "/profile", label: "Profile", shortLabel: "Profile" },
@@ -69,43 +73,57 @@ const navigationGroups = [
         end: true,
       },
       {
+        to: "/population",
+        label: "Population",
+        shortLabel: "Population",
+        navCode: "02",
+        description: "Care-unit pressure, hot patients, and overdue workflow lanes.",
+      },
+      {
         to: "/patients",
         label: "Patients",
         shortLabel: "Patients",
-        navCode: "02",
+        navCode: "03",
         description: "Patient roster and mission-control entry points.",
+      },
+    ],
+  },
+  {
+    label: "Workflow control",
+    items: [
+      {
+        to: "/imaging",
+        label: "Imaging",
+        shortLabel: "Imaging",
+        navCode: "04",
+        description: "Study review, escalation, and sign-off inside one workbench.",
       },
       {
         to: "/reports",
         label: "Reports",
         shortLabel: "Reports",
-        navCode: "03",
+        navCode: "05",
         description: "Imaging-linked report flow from intake to release.",
       },
-    ],
-  },
-  {
-    label: "Workspace control",
-    items: [
       {
         to: "/notifications",
         label: "Inbox",
         shortLabel: "Inbox",
-        navCode: "04",
+        navCode: "06",
         description: "Unread notifications, escalations, and follow-through.",
       },
       {
         to: "/profile",
         label: "Profile",
         shortLabel: "Profile",
-        navCode: "05",
+        navCode: "07",
         description: "Identity, preferences, and operator posture.",
       },
       {
         to: "/admin",
         label: "Admin",
         shortLabel: "Admin",
-        navCode: "06",
+        navCode: "08",
         description: "Organization controls, invites, and audit lanes.",
         adminOnly: true,
       },
@@ -140,6 +158,34 @@ const getWorkspaceMeta = (pathname, unreadCount, user) => {
       chips: [
         { label: "Roster indexed", tone: "low" },
         { label: unreadLabel, tone: unreadCount > 0 ? "medium" : "low" },
+        { label: orgLabel, tone: "low" },
+      ],
+    };
+  }
+
+  if (pathname === "/population") {
+    return {
+      eyebrow: "Population operations",
+      title: "Care-Unit Command Board",
+      summary:
+        "Sort the roster by pressure, scan overdue workflow, and see alert plus imaging-review demand across the active population.",
+      chips: [
+        { label: "Unit pressure live", tone: "medium" },
+        { label: unreadLabel, tone: unreadCount > 0 ? "medium" : "low" },
+        { label: orgLabel, tone: "low" },
+      ],
+    };
+  }
+
+  if (pathname === "/imaging") {
+    return {
+      eyebrow: "Imaging operations",
+      title: "Imaging Triage Workbench",
+      summary:
+        "Review studies, manage escalation and sign-off state, and keep report workflow connected to the same patient context.",
+      chips: [
+        { label: "Review lane", tone: "medium" },
+        { label: "Report linked", tone: "low" },
         { label: orgLabel, tone: "low" },
       ],
     };
@@ -373,10 +419,12 @@ const App = () => {
           <RouteErrorBoundary>
             <Suspense fallback={<section className="panel loading-panel"><div className="spinner" /><p>Loading workspace&hellip;</p></section>}>
               <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/patients" element={<Patients />} />
-                <Route path="/patients/:patientId" element={<PatientDetails />} />
-                <Route path="/reports" element={<Reports />} />
+              <Route path="/" element={<Home />} />
+              <Route path="/population" element={<Population />} />
+              <Route path="/patients" element={<Patients />} />
+              <Route path="/patients/:patientId" element={<PatientDetails />} />
+              <Route path="/imaging" element={<ImagingWorkbench />} />
+              <Route path="/reports" element={<Reports />} />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/admin" element={<Admin />} />

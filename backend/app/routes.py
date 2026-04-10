@@ -48,6 +48,7 @@ from backend.app.core.security import (
 )
 from backend.app.db.enterprise_repository import (
     acknowledge_alert,
+    build_imaging_workbench,
     build_operations_live_snapshot,
     build_patient_timeline,
     create_care_task,
@@ -76,6 +77,7 @@ from backend.app.db.enterprise_repository import (
     rotate_user_session,
     touch_user_session,
     update_user_active_state,
+    update_imaging_study_review,
     update_user_role,
     update_patient_task,
     update_user_profile,
@@ -95,6 +97,8 @@ from backend.app.models import (
     IcuRiskResponse,
     ImagingAnalysisResponse,
     ImagingStudyRecord,
+    ImagingStudyReviewRequest,
+    ImagingWorkbench,
     InviteCodeCreateRequest,
     InviteCodeRecord,
     ModelRegistryEntry,
@@ -106,6 +110,7 @@ from backend.app.models import (
     PatientTaskCreateRequest,
     PatientTaskUpdateRequest,
     PatientTimelineEvent,
+    PopulationOperationsBoard,
     ReportJob,
     SessionRecord,
     StreamTokenResponse,
@@ -120,6 +125,7 @@ from backend.app.models import (
 )
 from backend.app.services.notification_service import notify_imaging_triage
 from backend.app.services.patient_service import (
+    build_population_operations_board,
     get_disease_prediction,
     get_icu_prediction,
     get_patient_or_404,
@@ -709,6 +715,21 @@ def patient_imaging_studies(
     return list_imaging_studies(db, organization_id, patient_id=patient_id, limit=limit)
 
 
+@secured_router.get("/imaging/workbench", response_model=ImagingWorkbench, tags=["imaging"])
+def imaging_workbench(
+    limit: int = Query(default=24, ge=1, le=100),
+    review_status: str = Query(default="all"),
+    db: Session = Depends(get_db),
+    current_user: UserProfile = REPORTING_ACCESS,
+) -> ImagingWorkbench:
+    return build_imaging_workbench(
+        db,
+        organization_id=_require_organization_id(current_user),
+        limit=limit,
+        review_status=review_status,
+    )
+
+
 @secured_router.get("/predict/icu/{patient_id}", response_model=IcuRiskResponse, tags=["predictions"])
 def icu_risk(
     patient_id: int,
@@ -816,6 +837,27 @@ def download_imaging_study(
     return Response(content=stored.content, media_type=study.content_type or stored.content_type, headers=headers)
 
 
+@secured_router.patch("/imaging/studies/{study_id}/review", response_model=ImagingStudyRecord, tags=["imaging"])
+def update_imaging_study_review_endpoint(
+    study_id: str,
+    payload: ImagingStudyReviewRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: UserProfile = REPORTING_ACCESS,
+) -> ImagingStudyRecord:
+    study = update_imaging_study_review(
+        db,
+        organization_id=_require_organization_id(current_user),
+        study_id=study_id,
+        actor_username=current_user.username,
+        payload=payload,
+    )
+    if study is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Imaging study {study_id} was not found.")
+    request.state.audit_detail = {"event": "imaging_review_updated", "study_id": study_id, "review_status": study.review_status}
+    return study
+
+
 @secured_router.get("/alerts", response_model=list[Alert], tags=["operations"])
 def alerts(
     db: Session = Depends(get_db),
@@ -844,6 +886,14 @@ def analytics_overview(
     current_user: UserProfile = CLINICAL_ACCESS,
 ) -> AnalyticsOverview:
     return get_analytics_overview(db, current_user, get_settings())
+
+
+@secured_router.get("/operations/population-board", response_model=PopulationOperationsBoard, tags=["operations"])
+def population_operations_board(
+    db: Session = Depends(get_db),
+    current_user: UserProfile = CLINICAL_ACCESS,
+) -> PopulationOperationsBoard:
+    return build_population_operations_board(db, current_user)
 
 
 @secured_router.get("/notifications", response_model=list[Notification], tags=["operations"])

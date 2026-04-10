@@ -78,6 +78,58 @@ def _ensure_utc(value: datetime | None) -> datetime | None:
     return value.astimezone(UTC)
 
 
+def _elapsed_minutes(timestamp: datetime | None, *, now: datetime | None = None) -> int | None:
+    if timestamp is None:
+        return None
+    reference = now or datetime.now(UTC)
+    return int((timestamp - reference).total_seconds() // 60)
+
+
+def _format_duration(minutes: int) -> str:
+    if minutes < 60:
+        return f"{minutes}m"
+    hours, remainder = divmod(minutes, 60)
+    if hours < 24:
+        return f"{hours}h {remainder}m" if remainder else f"{hours}h"
+    days, rem_hours = divmod(hours, 24)
+    return f"{days}d {rem_hours}h" if rem_hours else f"{days}d"
+
+
+def _derive_imaging_priority(analysis_payload: dict | None) -> str:
+    anomaly_score = float((analysis_payload or {}).get("anomaly_score") or 0.0)
+    if anomaly_score >= 0.72:
+        return "urgent"
+    if anomaly_score >= 0.45:
+        return "priority"
+    return "routine"
+
+
+def _derive_review_due_at(priority: str, *, reference: datetime | None = None) -> datetime:
+    now = reference or datetime.now(UTC)
+    offsets = {
+        "urgent": timedelta(minutes=20),
+        "priority": timedelta(minutes=60),
+        "routine": timedelta(hours=4),
+    }
+    return now + offsets.get(priority, timedelta(hours=4))
+
+
+def _review_due_label(review_status: str, review_due_at: datetime | None, *, now: datetime | None = None) -> tuple[str, bool, int | None]:
+    if review_status in {"signed_off", "reviewed"}:
+        return ("Closed" if review_status == "signed_off" else "Reviewed", False, None)
+    if review_due_at is None:
+        return ("No review due time", False, None)
+
+    due_in_minutes = _elapsed_minutes(review_due_at, now=now)
+    if due_in_minutes is None:
+        return ("No review due time", False, None)
+    if due_in_minutes < 0:
+        return (f"Overdue by {_format_duration(abs(due_in_minutes))}", True, due_in_minutes)
+    if due_in_minutes == 0:
+        return ("Due now", False, 0)
+    return (f"Due in {_format_duration(due_in_minutes)}", False, due_in_minutes)
+
+
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
 
@@ -873,6 +925,7 @@ def create_imaging_study(
     uploaded_by: str,
     analysis_payload: dict | None,
 ) -> ImagingStudyRecord:
+    priority = _derive_imaging_priority(analysis_payload)
     study = ImagingStudyORM(
         study_id=str(uuid4()),
         patient_id=patient_id,
@@ -880,6 +933,15 @@ def create_imaging_study(
         content_type=content_type,
         storage_uri=storage_uri,
         uploaded_by=uploaded_by,
+        priority=priority,
+        review_status="pending_review",
+        review_due_at=_derive_review_due_at(priority),
+        review_notes=None,
+        escalation_reason=None,
+        reviewed_by=None,
+        reviewed_at=None,
+        signed_off_by=None,
+        signed_off_at=None,
         analysis_payload=analysis_payload,
         created_at=datetime.now(UTC),
     )
@@ -1093,6 +1155,11 @@ def _notification_to_schema(notification: NotificationORM) -> Notification:
 
 
 def _imaging_study_to_schema(study: ImagingStudyORM) -> ImagingStudyRecord:
+    review_due_at = _ensure_utc(getattr(study, "review_due_at", None))
+    review_due_label, is_review_overdue, review_due_in_minutes = _review_due_label(
+        getattr(study, "review_status", "pending_review"),
+        review_due_at,
+    )
     analysis = ImagingAnalysisResponse.model_validate(study.analysis_payload) if study.analysis_payload else None
     return ImagingStudyRecord(
         study_id=study.study_id,
@@ -1102,6 +1169,18 @@ def _imaging_study_to_schema(study: ImagingStudyORM) -> ImagingStudyRecord:
         storage_uri=study.storage_uri,
         uploaded_by=study.uploaded_by,
         created_at=_ensure_utc(study.created_at),
+        priority=getattr(study, "priority", "routine"),
+        review_status=getattr(study, "review_status", "pending_review"),
+        review_due_at=review_due_at,
+        review_due_in_minutes=review_due_in_minutes,
+        review_due_label=review_due_label,
+        is_review_overdue=is_review_overdue,
+        review_notes=getattr(study, "review_notes", None),
+        escalation_reason=getattr(study, "escalation_reason", None),
+        reviewed_by=getattr(study, "reviewed_by", None),
+        reviewed_at=_ensure_utc(getattr(study, "reviewed_at", None)),
+        signed_off_by=getattr(study, "signed_off_by", None),
+        signed_off_at=_ensure_utc(getattr(study, "signed_off_at", None)),
         analysis=analysis,
     )
 
