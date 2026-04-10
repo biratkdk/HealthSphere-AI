@@ -111,11 +111,28 @@ const Reports = () => {
 
   const loading = patientsLoading || queueLoading;
   if (loading) {
-    return <section className="panel">Loading report workspace...</section>;
+    return (
+      <div className="page-grid">
+        <section className="panel full-span loading-panel">
+          <div className="spinner" />
+          <p>Loading report workspace&hellip;</p>
+        </section>
+      </div>
+    );
   }
 
   if (workspaceError) {
-    return <section className="panel error-panel">{workspaceError}</section>;
+    return (
+      <div className="page-grid">
+        <section className="panel full-span error-panel">
+          <strong className="error-text">Unable to load report workspace</strong>
+          <p>{workspaceError}</p>
+          <button className="secondary-button small-button" type="button" onClick={() => window.location.reload()}>
+            Reload
+          </button>
+        </section>
+      </div>
+    );
   }
 
   return (

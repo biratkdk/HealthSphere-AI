@@ -5,6 +5,7 @@ import useSWR from "swr";
 import ImagingResults from "../components/ImagingResults";
 import PatientVitals from "../components/PatientVitals";
 import {
+  acknowledgeAlert,
   createPatientHandoff,
   createPatientTask,
   downloadImagingStudy,
@@ -143,6 +144,7 @@ const PatientDetails = () => {
   const [taskBusy, setTaskBusy] = useState(false);
   const [handoffBusy, setHandoffBusy] = useState(false);
   const [taskActionId, setTaskActionId] = useState("");
+  const [ackBusy, setAckBusy] = useState("");
   const {
     data: summary = null,
     error: summaryError,
@@ -166,7 +168,14 @@ const PatientDetails = () => {
   };
 
   if (summaryLoading || studiesLoading || timelineLoading) {
-    return <section className="panel">Loading patient detail...</section>;
+    return (
+      <div className="page-grid">
+        <section className="panel full-span loading-panel">
+          <div className="spinner" />
+          <p>Loading patient workspace&hellip;</p>
+        </section>
+      </div>
+    );
   }
 
   const error =
@@ -175,11 +184,28 @@ const PatientDetails = () => {
     getRequestErrorMessage(timelineError, "") ||
     "";
   if (error) {
-    return <section className="panel error-panel">{error}</section>;
+    return (
+      <div className="page-grid">
+        <section className="panel full-span error-panel">
+          <strong className="error-text">Unable to load patient detail</strong>
+          <p>{error}</p>
+          <button className="secondary-button small-button" type="button" onClick={() => window.location.reload()}>
+            Reload
+          </button>
+        </section>
+      </div>
+    );
   }
 
   if (!summary) {
-    return <section className="panel">No patient detail available.</section>;
+    return (
+      <div className="page-grid">
+        <section className="panel full-span loading-panel">
+          <div className="spinner" />
+          <p>Waiting for patient data&hellip;</p>
+        </section>
+      </div>
+    );
   }
 
   const missionControl = summary.mission_control || {
@@ -227,6 +253,19 @@ const PatientDetails = () => {
       setActionError(getRequestErrorMessage(requestError, "Unable to update the care task."));
     } finally {
       setTaskActionId("");
+    }
+  };
+
+  const handleAcknowledgeAlert = async (alertId) => {
+    setActionError("");
+    try {
+      setAckBusy(alertId);
+      await acknowledgeAlert(alertId);
+      await mutateSummary();
+    } catch (requestError) {
+      setActionError(getRequestErrorMessage(requestError, "Unable to acknowledge the alert."));
+    } finally {
+      setAckBusy("");
     }
   };
 
@@ -612,8 +651,8 @@ const PatientDetails = () => {
         </div>
         <div className="queue-list compact-list">
           {(summary.open_alerts || []).map((alert) => (
-            <article key={alert.alert_id} className="queue-row">
-              <div>
+            <article key={alert.alert_id} className={`queue-row severity-${alert.severity}`}>
+              <div className="workflow-task-copy">
                 <div className="workflow-task-top">
                   <strong>{alert.title}</strong>
                   <span className={toneClassForValue(alert.severity)}>{alert.severity}</span>
@@ -621,6 +660,18 @@ const PatientDetails = () => {
                 <p className="subtle-copy">{alert.description}</p>
                 <p className="subtle-copy">{formatDateTime(alert.created_at)}</p>
               </div>
+              {!alert.acknowledged ? (
+                <button
+                  className="secondary-button small-button"
+                  type="button"
+                  disabled={ackBusy === alert.alert_id}
+                  onClick={() => handleAcknowledgeAlert(alert.alert_id)}
+                >
+                  {ackBusy === alert.alert_id ? "..." : "Acknowledge"}
+                </button>
+              ) : (
+                <span className="tone tone-low">Acknowledged</span>
+              )}
             </article>
           ))}
           {!summary.open_alerts?.length ? <p className="subtle-copy">No open alerts are active for this patient.</p> : null}
