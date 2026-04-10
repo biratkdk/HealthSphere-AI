@@ -8,19 +8,64 @@ import "../styles/public-landing.css";
 
 const platformPillars = [
   {
-    label: "Operations",
-    title: "Manage queue pressure",
-    detail: "Patient movement, unread escalation, and report load stay visible in one operating layer.",
+    label: "Mission control",
+    title: "See what changed first",
+    detail: "The signed-in product is built around delta visibility, accountable follow-through, and the next clinical action.",
   },
   {
-    label: "Imaging",
-    title: "Keep clinical context attached",
-    detail: "Imaging review and report delivery stay tied to the patient instead of splitting into another tool.",
+    label: "Workflow engine",
+    title: "Keep ownership visible",
+    detail: "Tasks, handoffs, due state, and unresolved pressure remain attached to the patient and the care unit.",
   },
   {
-    label: "Governance",
-    title: "Operate with traceability",
-    detail: "Sessions, roles, audit history, and admin control are part of the product, not an add-on.",
+    label: "Imaging and reports",
+    title: "Move from review to release",
+    detail: "Imaging context and report delivery stay inside the same operating system instead of splitting across tools.",
+  },
+];
+
+const platformIndex = [
+  {
+    code: "01",
+    status: "Live",
+    title: "Patient Mission Control",
+    detail: "What changed, why it matters now, and the next accountable actions on one patient surface.",
+    points: ["Mission control summary", "Open alerts and acknowledgements", "Timeline, labs, tasks, and imaging in one view"],
+  },
+  {
+    code: "02",
+    status: "Live",
+    title: "Ownership and SLA Engine",
+    detail: "Workflow stays explicit with assignees, due states, overdue pressure, and structured handoffs.",
+    points: ["Ownership status and due labels", "Structured what-changed and pending items", "Task and handoff pressure in context"],
+  },
+  {
+    code: "03",
+    status: "Live",
+    title: "Imaging Review Lane",
+    detail: "Clinical review stays attached to the patient record instead of becoming a disconnected upload flow.",
+    points: ["DICOM-aware upload guard", "Imaging context tied to the patient", "Synthetic demo imaging already linked in product proof"],
+  },
+  {
+    code: "04",
+    status: "Live",
+    title: "Report Orchestration",
+    detail: "Reports move through queue, progress, and delivery states with clearer operational visibility.",
+    points: ["Queue and workflow stages", "Progress tracking", "Release context tied to imaging and patient state"],
+  },
+  {
+    code: "05",
+    status: "Live",
+    title: "Governance and Admin",
+    detail: "Sessions, roles, invites, notifications, and audit visibility are product primitives, not afterthoughts.",
+    points: ["Role-aware sessions", "Admin and invite controls", "Audit-ready operating model"],
+  },
+  {
+    code: "06",
+    status: "Next",
+    title: "Population Command Boards",
+    detail: "The next layer brings ICU risk boards, overdue workflow boards, and unit-level control into the same shell.",
+    points: ["Care-unit pressure views", "Overdue task and unresolved-alert boards", "Outcome and throughput analytics"],
   },
 ];
 
@@ -182,6 +227,7 @@ const PublicLanding = ({ theme, setTheme }) => {
 
         <nav className="public-nav" aria-label="Public navigation">
           <a href="#platform">Platform</a>
+          <a href="#index">Index</a>
           <a href="#evidence">Proof</a>
           <a href="#access">Access</a>
         </nav>
@@ -210,7 +256,7 @@ const PublicLanding = ({ theme, setTheme }) => {
               <span className="public-mono-label">Cleaner front door. Same serious system.</span>
             </div>
 
-            <h2>A cleaner control plane for patient risk, imaging review, and report delivery.</h2>
+            <h2>The clinical operating system for patient pressure, imaging review, and report release.</h2>
 
             <p className="public-lead">
               HealthSphere AI turns the active care queue into one managed workspace: live pressure, imaging context,
@@ -299,10 +345,42 @@ const PublicLanding = ({ theme, setTheme }) => {
           </aside>
         </section>
 
+        <section className="public-section public-index-section" id="index">
+          <div className="public-section-heading public-section-heading-wide">
+            <p className="public-mono-label">Platform index</p>
+            <h2>The product lanes are richer than the reference app, but aligned to HealthSphere&apos;s real core.</h2>
+            <p>
+              This is not a wellness dashboard or a generic education site. The feature system is organized around
+              clinical operations: patient control, ownership, imaging, reports, governance, and the next population
+              command layer.
+            </p>
+          </div>
+
+          <div className="public-index-grid">
+            {platformIndex.map((item) => (
+              <article key={item.title} className="public-index-card">
+                <div className="public-index-top">
+                  <span className="public-index-code">{item.code}</span>
+                  <span className={`public-index-status public-index-status-${item.status.toLowerCase()}`}>{item.status}</span>
+                </div>
+                <div className="public-index-copy">
+                  <h3>{item.title}</h3>
+                  <p>{item.detail}</p>
+                </div>
+                <ul className="public-index-list">
+                  {item.points.map((point) => (
+                    <li key={point}>{point}</li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section className="public-section" id="evidence">
           <div className="public-section-heading">
             <p className="public-mono-label">Product proof</p>
-            <h2>Real surfaces from the application, not concept art.</h2>
+            <h2>Real product surfaces, not concept-only marketing.</h2>
             <p>
               The landing now shows the actual dashboard language of the signed-in product, paired with a synthetic
               demo patient and project imaging asset.

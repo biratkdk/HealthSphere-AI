@@ -1,5 +1,5 @@
 import React, { Component, Suspense, lazy, useEffect, useState } from "react";
-import { NavLink, Route, Routes, useLocation } from "react-router-dom";
+import { NavLink, Route, Routes, matchPath, useLocation } from "react-router-dom";
 import useSWR from "swr";
 
 class RouteErrorBoundary extends Component {
@@ -56,6 +56,164 @@ const mobileRoutes = [
   { to: "/profile", label: "Profile", shortLabel: "Profile" },
 ];
 
+const navigationGroups = [
+  {
+    label: "Clinical command",
+    items: [
+      {
+        to: "/",
+        label: "Operations",
+        shortLabel: "Ops",
+        navCode: "01",
+        description: "Care-unit pressure, alerts, and live queue load.",
+        end: true,
+      },
+      {
+        to: "/patients",
+        label: "Patients",
+        shortLabel: "Patients",
+        navCode: "02",
+        description: "Patient roster and mission-control entry points.",
+      },
+      {
+        to: "/reports",
+        label: "Reports",
+        shortLabel: "Reports",
+        navCode: "03",
+        description: "Imaging-linked report flow from intake to release.",
+      },
+    ],
+  },
+  {
+    label: "Workspace control",
+    items: [
+      {
+        to: "/notifications",
+        label: "Inbox",
+        shortLabel: "Inbox",
+        navCode: "04",
+        description: "Unread notifications, escalations, and follow-through.",
+      },
+      {
+        to: "/profile",
+        label: "Profile",
+        shortLabel: "Profile",
+        navCode: "05",
+        description: "Identity, preferences, and operator posture.",
+      },
+      {
+        to: "/admin",
+        label: "Admin",
+        shortLabel: "Admin",
+        navCode: "06",
+        description: "Organization controls, invites, and audit lanes.",
+        adminOnly: true,
+      },
+    ],
+  },
+];
+
+const getWorkspaceMeta = (pathname, unreadCount, user) => {
+  const unreadLabel = unreadCount > 0 ? `${unreadCount} unread inbox` : "Inbox clear";
+  const orgLabel = user?.organization_name ? `Org: ${user.organization_name}` : "Organization scoped";
+
+  if (matchPath("/patients/:patientId", pathname)) {
+    return {
+      eyebrow: "Patient operations",
+      title: "Patient Mission Control",
+      summary:
+        "What changed, why it matters now, and the next accountable actions across alerts, labs, handoffs, imaging, and workflow.",
+      chips: [
+        { label: "Mission control live", tone: "low" },
+        { label: "Next actions ready", tone: "medium" },
+        { label: unreadLabel, tone: unreadCount > 0 ? "high" : "low" },
+      ],
+    };
+  }
+
+  if (pathname === "/patients") {
+    return {
+      eyebrow: "Patient command",
+      title: "Mission-Control Roster",
+      summary:
+        "Sort the roster by pressure, spot the right patient quickly, and move straight into the clinical control view.",
+      chips: [
+        { label: "Roster indexed", tone: "low" },
+        { label: unreadLabel, tone: unreadCount > 0 ? "medium" : "low" },
+        { label: orgLabel, tone: "low" },
+      ],
+    };
+  }
+
+  if (pathname === "/reports") {
+    return {
+      eyebrow: "Report orchestration",
+      title: "Imaging and Report Queue",
+      summary:
+        "Keep clinical context attached while reports move from intake to draft, review, and accountable delivery.",
+      chips: [
+        { label: "Queue staged", tone: "medium" },
+        { label: "Imaging linked", tone: "low" },
+        { label: orgLabel, tone: "low" },
+      ],
+    };
+  }
+
+  if (pathname === "/notifications") {
+    return {
+      eyebrow: "Clinical inbox",
+      title: "Alerts and Notifications",
+      summary:
+        "Track unread signals, acknowledgements, and escalation pressure without losing the workflow trail.",
+      chips: [
+        { label: unreadLabel, tone: unreadCount > 0 ? "high" : "low" },
+        { label: "Acknowledge fast", tone: "medium" },
+        { label: orgLabel, tone: "low" },
+      ],
+    };
+  }
+
+  if (pathname === "/profile") {
+    return {
+      eyebrow: "Operator identity",
+      title: "Profile and Preferences",
+      summary:
+        "Control identity, view access posture, and keep this workspace aligned to your organization and role.",
+      chips: [
+        { label: user?.role || "role-scoped", tone: "low" },
+        { label: user?.auth_provider || "password auth", tone: "medium" },
+        { label: orgLabel, tone: "low" },
+      ],
+    };
+  }
+
+  if (pathname === "/admin") {
+    return {
+      eyebrow: "Governance and control",
+      title: "Admin Console",
+      summary:
+        "Manage invites, audit visibility, and organization-level control without leaving the operating system.",
+      chips: [
+        { label: "Audit live", tone: "medium" },
+        { label: "Role aware", tone: "low" },
+        { label: orgLabel, tone: "low" },
+      ],
+    };
+  }
+
+  return {
+    eyebrow: "Operations command",
+    title: "Clinical Operating System",
+    summary:
+      "A live workspace for care-unit pressure, patient risk, report load, and accountable workflow in one command surface.",
+    chips: [
+      { label: "Operations live", tone: "low" },
+      { label: unreadLabel, tone: unreadCount > 0 ? "medium" : "low" },
+      { label: orgLabel, tone: "low" },
+    ],
+  };
+};
+
 const useTheme = () => {
   const [theme, setTheme] = useState(() => {
     try {
@@ -82,6 +240,11 @@ const App = () => {
 
   const { data: analytics } = useSWR(isAuthenticated ? ["analytics"] : null);
   const unreadCount = analytics?.unread_notifications || 0;
+  const workspaceMeta = getWorkspaceMeta(location.pathname, unreadCount, user);
+  const visibleNavigationGroups = navigationGroups.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => !item.adminOnly || user?.role === "admin"),
+  }));
 
   const initials = (user?.full_name || "HS")
     .split(" ")
@@ -114,67 +277,115 @@ const App = () => {
   }
 
   return (
-    <div className="shell">
-      <header className="app-header">
-        <div className="brand-block">
-          <p className="eyebrow">Clinical intelligence platform</p>
-          <h1>HealthSphere AI</h1>
-          <p className="subtle-copy">Real-time care coordination, predictive monitoring, and operator workflow control.</p>
-        </div>
-        <div className="header-controls">
-          <nav className="nav-links nav-links-primary" aria-label="Primary">
-            <NavLink to="/" end>Operations</NavLink>
-            <NavLink to="/patients">Patients</NavLink>
-            <NavLink to="/reports">Reports</NavLink>
-            <div className="nav-badge-wrap">
-              <NavLink to="/notifications">Inbox</NavLink>
-              {unreadCount > 0 && (
-                <span className="nav-badge">{unreadCount > 99 ? "99+" : unreadCount}</span>
-              )}
-            </div>
-            <NavLink to="/profile">Profile</NavLink>
-            {user?.role === "admin" ? <NavLink to="/admin">Admin</NavLink> : null}
-          </nav>
-
-          <div className="user-chip">
-            <div className="user-avatar small-avatar">{initials}</div>
-            <div>
-              <strong>{user?.full_name}</strong>
-              <span>{user?.role} &middot; {user?.username}</span>
-              <span>{user?.organization_name || user?.preferences?.department || user?.auth_provider}</span>
-            </div>
-            <button
-              className="theme-toggle"
-              type="button"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ? "Day" : "Night"}
-            </button>
-            <button className="secondary-button small-button" type="button" onClick={() => void logout()}>
-              Sign out
-            </button>
+    <div className="shell app-shell">
+      <aside className="app-sidebar">
+        <section className="sidebar-brand-card">
+          <div className="sidebar-brand-mark">HS</div>
+          <div className="sidebar-brand-copy">
+            <p className="sidebar-kicker">Clinical operating system</p>
+            <h1>HealthSphere AI</h1>
+            <p>Mission control, imaging review, report release, and accountable workflow in one enterprise workspace.</p>
           </div>
-        </div>
-      </header>
+        </section>
 
-      <main className="app-main">
-        <RouteErrorBoundary>
-          <Suspense fallback={<section className="panel loading-panel"><div className="spinner" /><p>Loading workspace&hellip;</p></section>}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/patients" element={<Patients />} />
-              <Route path="/patients/:patientId" element={<PatientDetails />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/notifications" element={<Notifications />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/auth/callback" element={<AuthCallback />} />
-            </Routes>
-          </Suspense>
-        </RouteErrorBoundary>
-      </main>
+        <div className="sidebar-nav-stack">
+          {visibleNavigationGroups.map((group) => (
+            <section key={group.label} className="sidebar-nav-group">
+              <p className="sidebar-group-label">{group.label}</p>
+              <nav className="sidebar-nav" aria-label={group.label}>
+                {group.items.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    end={item.end}
+                    className={({ isActive }) => `sidebar-nav-link${isActive ? " active" : ""}`}
+                  >
+                    <span className="sidebar-nav-code">{item.navCode}</span>
+                    <span className="sidebar-nav-copy">
+                      <strong>{item.label}</strong>
+                      <small>{item.description}</small>
+                    </span>
+                    {item.to === "/notifications" && unreadCount > 0 ? (
+                      <span className="sidebar-nav-badge">{unreadCount > 99 ? "99+" : unreadCount}</span>
+                    ) : null}
+                  </NavLink>
+                ))}
+              </nav>
+            </section>
+          ))}
+        </div>
+
+        <section className="sidebar-status-card">
+          <p className="sidebar-group-label">Platform posture</p>
+          <strong>One operating model</strong>
+          <p>
+            Patient risk, task ownership, handoffs, imaging review, reports, and audit visibility stay inside the same
+            control plane.
+          </p>
+          <div className="sidebar-status-pills">
+            <span className="tone tone-low">Mission control</span>
+            <span className="tone tone-medium">Workflow engine</span>
+            <span className="tone tone-low">Governance ready</span>
+          </div>
+        </section>
+      </aside>
+
+      <div className="workspace-shell">
+        <header className="workspace-header">
+          <div className="workspace-header-copy">
+            <p className="workspace-kicker">{workspaceMeta.eyebrow}</p>
+            <h1>{workspaceMeta.title}</h1>
+            <p>{workspaceMeta.summary}</p>
+            <div className="workspace-chip-row">
+              {workspaceMeta.chips.map((chip) => (
+                <span key={chip.label} className={`tone tone-${chip.tone}`}>
+                  {chip.label}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="workspace-header-actions">
+            <div className="user-chip workspace-user-chip">
+              <div className="user-avatar small-avatar">{initials}</div>
+              <div>
+                <strong>{user?.full_name}</strong>
+                <span>{user?.role} &middot; {user?.username}</span>
+                <span>{user?.organization_name || user?.preferences?.department || user?.auth_provider}</span>
+              </div>
+              <button
+                className="theme-toggle"
+                type="button"
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                aria-label="Toggle theme"
+              >
+                {theme === "dark" ? "Day" : "Night"}
+              </button>
+              <button className="secondary-button small-button" type="button" onClick={() => void logout()}>
+                Sign out
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <main className="app-main workspace-main">
+          <RouteErrorBoundary>
+            <Suspense fallback={<section className="panel loading-panel"><div className="spinner" /><p>Loading workspace&hellip;</p></section>}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/patients" element={<Patients />} />
+                <Route path="/patients/:patientId" element={<PatientDetails />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/notifications" element={<Notifications />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
+              </Routes>
+            </Suspense>
+          </RouteErrorBoundary>
+        </main>
+      </div>
 
       <nav className="mobile-tabbar" aria-label="Mobile navigation">
         {mobileRoutes.map((route) => (
