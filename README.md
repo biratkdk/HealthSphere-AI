@@ -1,6 +1,6 @@
 # HealthSphere AI
 
-HealthSphere AI is a full-stack clinical operations platform for patient risk review, imaging triage, report orchestration, care coordination, analytics, and governance. The repository is structured as a deployable product rather than a disconnected demo: the frontend, API, persistence layer, background execution path, ML artifacts, documentation, and delivery assets all ship together.
+A production-grade healthcare AI platform combining patient management, ICU risk prediction, disease screening, medical imaging triage, and automated clinical reporting — built with FastAPI, React, PostgreSQL, and deployed on Vercel with enterprise Kubernetes/Terraform IaC.
 
 ## What the product includes
 
